@@ -3,443 +3,386 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Aplikasi Absensi Siswa - Van Kartu</title>
-  <!-- Libraries: html5-qrcode (scan), qrcode (generate), xlsx (export excel), jspdf (pdf) -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <title>Aplikasi Absensi Siswa - VAN KARTU</title>
   <style>
-    :root{--tosca:#13c2c2;--bg:#f6fbfb;--card:#ffffff}
-    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
-    body{margin:0;background:var(--bg);color:#222}
+    :root{--tosca:#29b3a7;--blue:#0b76d1}
+    *{box-sizing:border-box;font-family:Inter,Segoe UI,Arial}
+    body{margin:0;background:#f6f8fb;color:#222}
     .center{display:flex;align-items:center;justify-content:center}
-    header{background:linear-gradient(90deg,var(--tosca),#3fbfd7);padding:14px;color:#fff}
-    .container{max-width:1000px;margin:20px auto;padding:16px}
-    .card{background:var(--card);border-radius:8px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
-    .grid{display:grid;gap:12px}
-    .row{display:flex;gap:12px}
-    button{background:var(--tosca);border:none;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer}
-    input,select,textarea{padding:8px;border-radius:6px;border:1px solid #ddd;width:100%}
+    /* Login */
+    .login-page{height:100vh;background:linear-gradient(135deg,var(--tosca),var(--blue));color:white}
+    .login-card{width:360px;background:rgba(255,255,255,0.06);padding:24px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2)}
+    .login-card h2{margin:6px 0 16px;font-weight:600}
+    .input{width:100%;padding:10px;border-radius:8px;border:0;margin-bottom:10px}
+    .btn{padding:10px 14px;border-radius:8px;border:0;cursor:pointer}
+    .btn-primary{background:white;color:var(--blue);font-weight:700}
+    .small{font-size:13px;opacity:0.9}
+
+    /* App layout */
+    .app{display:flex;height:100vh}
+    .sidebar{width:260px;background:white;padding:18px;border-right:1px solid #e6e9ef}
+    .main{flex:1;padding:18px;overflow:auto}
+    .card{background:white;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.04);margin-bottom:12px}
+    .h{font-weight:700;margin:0 0 8px}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+    th,td{padding:8px;border-bottom:1px solid #f0f2f5;text-align:left}
+    .flex{display:flex;gap:8px;align-items:center}
+    .qr-canvas{width:160px;height:160px}
+    .settings img{max-width:100%;height:80px;object-fit:contain}
     .muted{color:#666;font-size:13px}
-    /* login page */
-    #login-page{height:100vh;background:linear-gradient(180deg,#0fb5b5,#66d4d4);display:flex;align-items:center;justify-content:center}
-    #login-card{width:380px;padding:22px;border-radius:12px;background:rgba(255,255,255,0.98);box-shadow:0 10px 30px rgba(0,0,0,0.12)}
-    #logo-preview{width:100px;height:100px;border-radius:10px;object-fit:contain;background:#fff;display:block;margin:0 auto 10px}
-    .danger{background:#e04;}
-    .small{font-size:13px}
-    footer{margin-top:20px;text-align:center;color:#666}
+    .danger{background:#ff605c;color:white}
   </style>
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <!-- LOGIN -->
-  <div id="login-page">
-    <div id="login-card" class="card">
-      <img id="logo-preview" src="" alt="Logo Sekolah"/>
-      <h2 class="center">Login Admin</h2>
-      <p class="muted center">Masuk untuk mengelola absensi</p>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-page center">
+  <div class="login-card">
+    <div style="text-align:center;margin-bottom:12px">
+      <img id="loginLogo" src="" alt="Logo Sekolah" style="height:68px;object-fit:contain;margin-bottom:8px">
+      <h2>Admin VAN KARTU</h2>
+    </div>
+    <div>
+      <input id="username" class="input" placeholder="Username" value="Van64">
+      <input id="password" type="password" class="input" placeholder="Password" value="Van1909">
+      <button id="loginBtn" class="btn btn-primary" style="width:100%">Masuk</button>
+      <p class="small" style="margin-top:8px">Gunakan Username: <b>Van64</b> Password: <b>Van1909</b></p>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="app" style="display:none">
+  <div class="sidebar">
+    <div style="text-align:center;margin-bottom:12px">
+      <img id="sideLogo" src="" alt="Logo" style="height:64px;object-fit:contain">
+      <h3 id="schoolName">Nama Sekolah</h3>
+      <p class="muted" id="schoolSub">Kepala Sekolah: - | Guru: -</p>
+    </div>
+
+    <div class="card">
+      <h4 class="h">Menu</h4>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn" onclick="show('students')">Siswa</button>
+        <button class="btn" onclick="show('attendance')">Absensi</button>
+        <button class="btn" onclick="show('scanner')">Pindai QR</button>
+        <button class="btn" onclick="show('settings')">Setelan</button>
+        <button class="btn danger" onclick="logout()">Keluar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4 class="h">Unduh</h4>
+      <div class="flex" style="flex-direction:column">
+        <button class="btn" onclick="exportExcel()">Download Excel</button>
+        <button class="btn" onclick="exportPDF()">Download PDF</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="main">
+    <!-- STUDENTS -->
+    <div id="view-students" class="card" style="display:none">
+      <h3 class="h">Daftar Siswa</h3>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="newName" class="input" placeholder="Nama siswa">
+        <input id="newId" class="input" placeholder="ID unik (mis. NIS)">
+        <button class="btn btn-primary" onclick="addStudent()">Tambah</button>
+      </div>
+      <div style="margin-bottom:8px">
+        <label class="small">Tambah otomatis (CSV):</label>
+        <input type="file" id="csvUpload" accept=".csv" onchange="handleCSVUpload(event)">
+      </div>
+      <table id="studentsTable">
+        <thead><tr><th>ID</th><th>Nama</th><th>QR</th><th>Aksi</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div id="view-attendance" class="card" style="display:none">
+      <h3 class="h">Rekap Absensi</h3>
+      <div style="margin-bottom:8px">
+        <input type="date" id="filterDate" onchange="renderAttendance()"> 
+      </div>
+      <table id="attendanceTable">
+        <thead><tr><th>Waktu</th><th>ID</th><th>Nama</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- SCANNER -->
+    <div id="view-scanner" class="card" style="display:none">
+      <h3 class="h">Pindai QR (Siswa)</h3>
+      <div id="qr-reader" style="width:100%"></div>
+      <p class="muted">Catatan: scanner membutuhkan akses kamera. Buka lewat HTTPS atau localhost untuk camera access.</p>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="view-settings" class="card settings" style="display:none">
+      <h3 class="h">Setelan</h3>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="flex:1">
+          <label class="small">Upload Logo Sekolah (akan tersimpan di browser)</label>
+          <input type="file" id="logoUpload" accept="image/*" onchange="uploadLogo(event)">
+        </div>
+        <div style="width:220px;text-align:center">
+          <img id="logoPreview" src="" alt="Preview logo" style="height:80px;object-fit:contain">
+        </div>
+      </div>
       <div style="margin-top:12px">
-        <label>Username</label>
-        <input id="login-username" placeholder="Masukkan username" />
+        <label class="small">Nama Sekolah</label>
+        <input id="inpSchoolName" class="input">
+        <label class="small">Nama Guru</label>
+        <input id="inpTeacher" class="input">
+        <label class="small">Nama Kepala Sekolah</label>
+        <input id="inpHeadmaster" class="input">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-primary" onclick="saveSettings()">Simpan</button>
+          <button class="btn" onclick="resetData()">Reset Data (bersihkan storage)</button>
+        </div>
       </div>
-      <div style="margin-top:8px">
-        <label>Password</label>
-        <input id="login-password" type="password" placeholder="Masukkan password" />
-      </div>
-      <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
-        <button id="login-btn">Login</button>
-        <button id="fill-demo">Isi Demo</button>
-      </div>
-      <p class="small muted center" style="margin-top:8px">Username: <b></b>  Password: <b></b></p>
-      <footer>Van Kartu — Aplikasi Absensi Siswa</footer>
     </div>
+
   </div>
-
-  <!-- APP -->
-  <div id="app" style="display:none">
-    <header>
-      <div class="container row" style="align-items:center;justify-content:space-between">
-        <div style="display:flex;gap:12px;align-items:center">
-          <img id="top-logo" src="" alt="logo" style="width:56px;height:56px;border-radius:8px;object-fit:contain;background:#fff;padding:6px" />
-          <div>
-            <div id="school-name" style="font-weight:700;font-size:18px">Nama Sekolah</div>
-            <div class="muted" id="school-sub">Nama Guru • Kepala Sekolah</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button id="btn-settings">Setelan</button>
-          <button id="btn-logout" style="background:#ff6b6b">Logout</button>
-        </div>
-      </div>
-    </header>
-
-    <div class="container">
-      <div class="grid" style="grid-template-columns:1fr 380px;gap:18px">
-        <div>
-          <div class="card">
-            <h3>Manajemen Siswa</h3>
-            <div class="row" style="margin-top:8px">
-              <input id="student-name" placeholder="Nama siswa" />
-              <input id="student-id" placeholder="ID / NIS" />
-              <button id="add-student">Tambah</button>
-            </div>
-            <div style="margin-top:10px">
-              <label>Tambah otomatis via CSV (kolom: id,nama)</label>
-              <input id="csv-file" type="file" accept=".csv" />
-            </div>
-            <div style="margin-top:12px">
-              <h4>Daftar Siswa</h4>
-              <div style="max-height:320px;overflow:auto;margin-top:8px">
-                <table id="students-table"><thead><tr><th>ID</th><th>Nama</th><th>Aksi</th></tr></thead><tbody></tbody></table>
-              </div>
-            </div>
-          </div>
-
-          <div class="card" style="margin-top:14px">
-            <h3>Absensi Hari Ini <span id="today-label" class="muted small" style="font-weight:400"></span></h3>
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <button id="start-scan">Pindai QR (Scanner)</button>
-              <button id="show-generate">Buat QR Siswa</button>
-              <button id="reset-attendance" style="background:#ff8a5b">Reset Hari Ini</button>
-            </div>
-            <div style="margin-top:12px">
-              <table id="attendance-table"><thead><tr><th>ID</th><th>Nama</th><th>Status</th><th>Waktu</th></tr></thead><tbody></tbody></table>
-            </div>
-            <div style="margin-top:10px;display:flex;gap:8px">
-              <button id="export-excel">Unduh Excel</button>
-              <button id="export-pdf">Unduh PDF</button>
-            </div>
-          </div>
-
-          <div class="card" id="scanner-card" style="margin-top:14px;display:none">
-            <h3>Scanner QR</h3>
-            <div id="reader" style="width:100%"></div>
-            <p class="muted small">Scan QR yang berisi ID siswa (contoh payload: <code>{"id":"123"}</code>) atau hanya teks ID.</p>
-            <div style="margin-top:8px"><button id="stop-scan" style="background:#f44">Stop Scan</button></div>
-          </div>
-
-          <div class="card" id="qr-generator" style="margin-top:14px;display:none">
-            <h3>Generate QR Siswa</h3>
-            <p class="muted small">Pilih siswa lalu tampilkan QR untuk diprint / dipindai oleh scanner lain</p>
-            <select id="select-student"></select>
-            <div id="qrcode-holder" style="padding:12px;margin-top:10px;background:#fafafa;border-radius:8px;text-align:center"></div>
-          </div>
-
-        </div>
-
-        <aside>
-          <div class="card">
-            <h3>Ringkasan</h3>
-            <div style="margin-top:10px">
-              <div>Hadir: <span id="count-hadir">0</span></div>
-              <div>Izin: <span id="count-izin">0</span></div>
-              <div>Sakit: <span id="count-sakit">0</span></div>
-            </div>
-          </div>
-
-          <div class="card" style="margin-top:12px">
-            <h3>Setelan Cepat</h3>
-            <div style="margin-top:8px">
-              <label>Atur auto-mark saat scan</label>
-              <select id="auto-mark"><option value="hadir">Auto: Hadir</option><option value="ask">Minta konfirmasi</option></select>
-            </div>
-            <div style="margin-top:8px">
-              <label>Tanggal absensi</label>
-              <input id="attendance-date" type="date" />
-            </div>
-          </div>
-        </aside>
-      </div>
-
-      <!-- SETTINGS MODAL -->
-      <div id="settings" class="card" style="margin-top:14px;display:none">
-        <h3>Setelan Sekolah</h3>
-        <div style="display:grid;gap:8px">
-          <div>
-            <label>Logo Sekolah (png/jpg)</label>
-            <input id="logo-upload" type="file" accept="image/*" />
-          </div>
-          <div>
-            <label>Nama Sekolah</label>
-            <input id="input-school" />
-          </div>
-          <div>
-            <label>Nama Guru</label>
-            <input id="input-guru" />
-          </div>
-          <div>
-            <label>Nama Kepala Sekolah</label>
-            <input id="input-kepala" />
-          </div>
-          <div style="display:flex;gap:8px">
-            <button id="save-settings">Simpan</button>
-            <button id="close-settings" style="background:#ddd;color:#111">Tutup</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
+</div>
 
 <script>
-// --- Simple app using localStorage ---
-const ADMIN_USER = 'Van64';
-const ADMIN_PASS = 'Van1909';
-const LS_PREFIX = 'van_absensi_v1_';
-const formatDate = d=> new Date(d).toLocaleString();
-
-// Default state
-function loadState(){
-  return {
-    students: JSON.parse(localStorage.getItem(LS_PREFIX+'students')||'[]'),
-    attendance: JSON.parse(localStorage.getItem(LS_PREFIX+'attendance')||'{}'), // keyed by date
-    settings: JSON.parse(localStorage.getItem(LS_PREFIX+'settings')||JSON.stringify({school:'Nama Sekolah',guru:'Nama Guru',kepala:'Kepala Sekolah',logo:''}))
-  }
+// --- Storage helpers ---
+const STORAGE_KEYS = {
+  students: 'van_students_v1',
+  attendance: 'van_attendance_v1',
+  settings: 'van_settings_v1'
 }
-function saveState(state){
-  localStorage.setItem(LS_PREFIX+'students', JSON.stringify(state.students));
-  localStorage.setItem(LS_PREFIX+'attendance', JSON.stringify(state.attendance));
-  localStorage.setItem(LS_PREFIX+'settings', JSON.stringify(state.settings));
+
+function load(key, fallback){
+  try{ const s = localStorage.getItem(key); return s? JSON.parse(s): fallback }
+  catch(e){ return fallback }
 }
-let state = loadState();
+function save(key, val){ localStorage.setItem(key, JSON.stringify(val)) }
 
-// --- Login handling ---
-const loginPage = document.getElementById('login-page');
-const app = document.getElementById('app');
-const logoPreview = document.getElementById('logo-preview');
-const topLogo = document.getElementById('top-logo');
-function initLoginUI(){
-  logoPreview.src = state.settings.logo||'';
+// default settings
+let settings = load(STORAGE_KEYS.settings, {
+  schoolName: 'SMA Contoh', teacher: '-', headmaster: '-', logo: ''
+})
+let students = load(STORAGE_KEYS.students, [])
+let attendance = load(STORAGE_KEYS.attendance, [])
+
+// --- Login ---
+const ADMIN_USER = 'Van64'
+const ADMIN_PASS = 'Van1909'
+const loginPage = document.getElementById('loginPage')
+const app = document.getElementById('app')
+
+function showLogin(){ loginPage.style.display='flex'; app.style.display='none' }
+function showApp(){ loginPage.style.display='none'; app.style.display='flex'; show('students') }
+
+document.getElementById('loginBtn').addEventListener('click', ()=>{
+  const u = document.getElementById('username').value.trim()
+  const p = document.getElementById('password').value
+  if(u===ADMIN_USER && p===ADMIN_PASS){ initApp(); showApp(); }
+  else alert('Username atau password salah')
+})
+
+function logout(){ if(confirm('Keluar dari admin?')) showLogin() }
+
+// --- UI navigation ---
+function show(view){
+  document.querySelectorAll('[id^="view-"]').forEach(el=>el.style.display='none')
+  document.getElementById('view-'+view).style.display='block'
+  if(view==='students') renderStudents()
+  if(view==='attendance') renderAttendance()
+  if(view==='scanner') startScanner()
+  if(view==='settings') renderSettings()
 }
-initLoginUI();
 
-document.getElementById('fill-demo').addEventListener('click',()=>{
-  document.getElementById('login-username').value = ADMIN_USER;
-  document.getElementById('login-password').value = ADMIN_PASS;
-});
-
-document.getElementById('login-btn').addEventListener('click',()=>{
-  const u = document.getElementById('login-username').value.trim();
-  const p = document.getElementById('login-password').value.trim();
-  if(u===ADMIN_USER && p===ADMIN_PASS){
-    localStorage.setItem(LS_PREFIX+'logged','1');
-    showApp();
-  } else alert('Username / Password salah.');
-});
-
-function showApp(){
-  loginPage.style.display='none';
-  app.style.display='block';
-  renderAll();
+// --- Students ---
+function addStudent(){
+  const name = document.getElementById('newName').value.trim()
+  const id = document.getElementById('newId').value.trim()
+  if(!name || !id){ alert('Isi nama dan ID'); return }
+  if(students.find(s=>s.id===id)){ alert('ID sudah ada'); return }
+  students.push({id,name})
+  save(STORAGE_KEYS.students, students)
+  document.getElementById('newName').value=''
+  document.getElementById('newId').value=''
+  renderStudents()
 }
-if(localStorage.getItem(LS_PREFIX+'logged')) showApp();
 
-// --- Render helpers ---
+function removeStudent(id){ if(!confirm('Hapus siswa?')) return; students = students.filter(s=>s.id!==id); save(STORAGE_KEYS.students, students); renderStudents(); }
+
 function renderStudents(){
-  const tbody = document.querySelector('#students-table tbody');
-  tbody.innerHTML='';
-  state.students.forEach(s=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${s.id}</td><td>${s.name}</td><td><button data-id="${s.id}" class="del">Hapus</button> <button data-id="${s.id}" class="gen">QR</button></td>`;
-    tbody.appendChild(tr);
-  });
-  // attach events
-  tbody.querySelectorAll('.del').forEach(b=>b.addEventListener('click',e=>{
-    const id = e.currentTarget.dataset.id;
-    if(confirm('Hapus siswa '+id+' ?')){ state.students = state.students.filter(x=>x.id!==id); saveState(state); renderAll(); }
-  }));
-  tbody.querySelectorAll('.gen').forEach(b=>b.addEventListener('click',e=>{
-    const id = e.currentTarget.dataset.id; document.getElementById('select-student').value=id; showGenerator(); generateQRFor(id);
-  }));
-  // populate select
-  const sel = document.getElementById('select-student'); sel.innerHTML='';
-  state.students.forEach(s=>{ const o=document.createElement('option');o.value=s.id;o.textContent=`${s.id} — ${s.name}`; sel.appendChild(o)});
+  const tbody = document.querySelector('#studentsTable tbody')
+  tbody.innerHTML=''
+  students.forEach(s=>{
+    const tr = document.createElement('tr')
+    tr.innerHTML = `<td>${s.id}</td><td>${s.name}</td><td><div id="qr-${s.id}"></div></td><td><button onclick="removeStudent('${s.id}')">Hapus</button></td>`
+    tbody.appendChild(tr)
+    // generate QR
+    const qrEl = document.getElementById('qr-'+s.id)
+    qrEl.innerHTML = ''
+    new QRCode(qrEl, {text: s.id, width:120,height:120})
+  })
+}
+
+// CSV upload: format: id,name
+function handleCSVUpload(e){
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader()
+  reader.onload = ev=>{
+    const text = ev.target.result
+    const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean)
+    let added=0
+    lines.forEach(line=>{
+      const parts = line.split(',')
+      if(parts.length>=2){ const id=parts[0].trim(), name=parts.slice(1).join(',').trim(); if(id && name && !students.find(s=>s.id===id)){ students.push({id,name}); added++ } }
+    })
+    save(STORAGE_KEYS.students, students)
+    alert('Ditambahkan '+added+' siswa')
+    renderStudents()
+  }
+  reader.readAsText(f)
+}
+
+// --- Attendance ---
+function recordAttendance(id, status='Hadir'){
+  const s = students.find(x=>x.id===id)
+  if(!s){ alert('Siswa tidak ditemukan: '+id); return }
+  const now = new Date()
+  const rec = {time: now.toISOString(), id: s.id, name: s.name, status}
+  attendance.push(rec)
+  save(STORAGE_KEYS.attendance, attendance)
+  renderAttendance()
 }
 
 function renderAttendance(){
-  const dateKey = (document.getElementById('attendance-date').value) || new Date().toISOString().slice(0,10);
-  document.getElementById('today-label').textContent = dateKey;
-  const attForDate = (state.attendance[dateKey]||{});
-  const tbody = document.querySelector('#attendance-table tbody'); tbody.innerHTML='';
-  let counts = {hadir:0,izin:0,sakit:0};
-  // show all students and status
-  state.students.forEach(s=>{
-    const rec = attForDate[s.id];
-    const st = rec ? rec.status : 'belum';
-    const time = rec ? rec.time : '-';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${s.id}</td><td>${s.name}</td><td><select data-id="${s.id}" class="status-sel"><option value="hadir">Hadir</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="belum">Belum</option></select></td><td class="time">${time}</td>`;
-    tbody.appendChild(tr);
-    const sel = tr.querySelector('.status-sel'); sel.value = st;
-    sel.addEventListener('change',()=>{
-      const v = sel.value; setAttendance(s.id,v,dateKey);
-    });
-    if(st==='hadir') counts.hadir++; if(st==='izin') counts.izin++; if(st==='sakit') counts.sakit++;
-  });
-  document.getElementById('count-hadir').textContent = counts.hadir;
-  document.getElementById('count-izin').textContent = counts.izin;
-  document.getElementById('count-sakit').textContent = counts.sakit;
+  const tbody = document.querySelector('#attendanceTable tbody')
+  tbody.innerHTML=''
+  const dateFilter = document.getElementById('filterDate').value
+  const list = attendance.slice().reverse()
+  list.forEach(a=>{
+    if(dateFilter){ const d = a.time.slice(0,10); if(d!==dateFilter) return }
+    const tr = document.createElement('tr')
+    tr.innerHTML = `<td>${new Date(a.time).toLocaleString()}</td><td>${a.id}</td><td>${a.name}</td><td>${a.status}</td>`
+    tbody.appendChild(tr)
+  })
 }
 
-function renderSettings(){
-  document.getElementById('input-school').value = state.settings.school;
-  document.getElementById('input-guru').value = state.settings.guru;
-  document.getElementById('input-kepala').value = state.settings.kepala;
-  document.getElementById('logo-preview').src = state.settings.logo||'';
-  document.getElementById('top-logo').src = state.settings.logo||'';
-  document.getElementById('school-name').textContent = state.settings.school;
-  document.getElementById('school-sub').textContent = `${state.settings.guru} • ${state.settings.kepala}`;
+// --- Scanner ---
+let html5QrScanner = null
+function startScanner(){
+  const qrReader = document.getElementById('qr-reader')
+  qrReader.innerHTML=''
+  if(html5QrScanner){ html5QrScanner.clear().catch(()=>{}); html5QrScanner = null }
+  html5QrScanner = new Html5Qrcode("qr-reader")
+  Html5Qrcode.getCameras().then(devices=>{
+    const camId = (devices && devices[0] && devices[0].id) || null
+    html5QrScanner.start(camId, {fps:10,qrbox:250}, qrCodeMessage=>{
+      // on success
+      // by default mark as Hadir; offer option to change
+      if(confirm('QR terdeteksi: '+qrCodeMessage+"\nTandai sebagai hadir? (OK=Hadir, Cancel=Ubah)")){
+        recordAttendance(qrCodeMessage,'Hadir')
+        alert('Absensi hadir tercatat')
+      } else {
+        const st = prompt('Masukkan keterangan (Hadir / Izin / Sakit)', 'Izin')
+        if(st) { recordAttendance(qrCodeMessage, st); alert('Absensi tercatat: '+st) }
+      }
+    }, errorMessage=>{
+      // ignore per-frame errors
+    }).catch(err=>{ console.error(err); qrReader.innerHTML = '<p class="muted">Gagal mengaktifkan kamera. Pastikan halaman dibuka via HTTPS atau localhost dan beri izin kamera.</p>' })
+  }).catch(err=>{
+    qrReader.innerHTML = '<p class="muted">Tidak ada kamera terdeteksi atau akses ditolak.</p>'
+  })
 }
-
-function renderAll(){ renderStudents(); renderAttendance(); renderSettings(); document.getElementById('attendance-date').value = new Date().toISOString().slice(0,10); }
-
-// --- Student add / CSV import ---
-document.getElementById('add-student').addEventListener('click',()=>{
-  const name = document.getElementById('student-name').value.trim();
-  const id = document.getElementById('student-id').value.trim();
-  if(!id || !name){alert('Isi ID dan Nama');return}
-  if(state.students.find(s=>s.id===id)){alert('ID sudah ada');return}
-  state.students.push({id,name}); saveState(state); document.getElementById('student-name').value='';document.getElementById('student-id').value=''; renderAll();
-});
-
-document.getElementById('csv-file').addEventListener('change',async(e)=>{
-  const f=e.target.files[0]; if(!f)return; const text=await f.text();
-  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  lines.forEach(line=>{
-    const parts = line.split(','); if(parts.length>=2){ const id=parts[0].trim(); const name=parts.slice(1).join(',').trim(); if(id && !state.students.find(s=>s.id===id)) state.students.push({id,name}); }
-  }); saveState(state); renderAll(); alert('Import CSV selesai');
-});
-
-// --- Attendance actions ---
-function setAttendance(id,status,dateKey){
-  dateKey = dateKey|| (document.getElementById('attendance-date').value || new Date().toISOString().slice(0,10));
-  if(!state.attendance[dateKey]) state.attendance[dateKey]={};
-  state.attendance[dateKey][id] = {status: status, time: formatDate(new Date())};
-  saveState(state); renderAttendance();
-}
-
-document.getElementById('reset-attendance').addEventListener('click',()=>{
-  const d=document.getElementById('attendance-date').value||new Date().toISOString().slice(0,10);
-  if(confirm('Reset semua absensi untuk '+d+' ?')){ state.attendance[d]={}; saveState(state); renderAttendance(); }
-});
-
-document.getElementById('attendance-date').addEventListener('change',renderAttendance);
-
-// --- Scanner using html5-qrcode ---
-let html5QrScanner=null;
-document.getElementById('start-scan').addEventListener('click',()=>{
-  document.getElementById('scanner-card').style.display='block';
-  const readerId = 'reader';
-  const cfg = { fps:10, qrbox:250 };
-  html5QrScanner = new Html5Qrcode(readerId);
-  Html5Qrcode.getCameras().then(cameras=>{
-    const camId = cameras && cameras[0] && cameras[0].id;
-    html5QrScanner.start(camId, cfg, qrSuccess).catch(err=>alert('Gagal mulai kamera: '+err));
-  }).catch(err=>alert('Tidak dapat akses kamera: '+err));
-});
-
-function qrSuccess(decodedText,decodedResult){
-  // payload could be JSON {"id":"123"} or plain id
-  let id = decodedText;
-  try{ const obj = JSON.parse(decodedText); if(obj.id) id = obj.id; }
-  catch(e){}
-  const auto = document.getElementById('auto-mark').value;
-  if(auto==='hadir'){
-    setAttendance(id,'hadir');
-    flash('Tercatat hadir: '+id);
-  } else {
-    // ask quick choice
-    const choice = prompt('Scan: '+id+" \nMasukkan status (hadir/izin/sakit) atau kosong=hadir:");
-    const st = (choice||'hadir').trim(); setAttendance(id,st);
-  }
-}
-
-function flash(msg){ alert(msg); }
-
-document.getElementById('stop-scan').addEventListener('click',()=>{
-  if(html5QrScanner) html5QrScanner.stop().then(()=>{document.getElementById('scanner-card').style.display='none'; html5QrScanner=null}).catch(()=>{});
-});
-
-// --- QR generator ---
-function showGenerator(){ document.getElementById('qr-generator').style.display='block'; }
-function generateQRFor(id){
-  const holder = document.getElementById('qrcode-holder'); holder.innerHTML='';
-  const payload = JSON.stringify({id});
-  new QRCode(holder, {text:payload,width:200,height:200});
-}
-
-document.getElementById('select-student').addEventListener('change',(e)=>{ generateQRFor(e.target.value); });
-
-document.getElementById('show-generate').addEventListener('click',()=>{ showGenerator(); if(state.students[0]){document.getElementById('select-student').value = state.students[0].id; generateQRFor(state.students[0].id)} });
-
-// --- Export ---
-function exportExcel(){
-  const dateKey = document.getElementById('attendance-date').value||new Date().toISOString().slice(0,10);
-  const att = state.attendance[dateKey]||{};
-  const rows = [['ID','Nama','Status','Waktu']];
-  state.students.forEach(s=>{ const r = att[s.id]; rows.push([s.id,s.name,r? r.status:'belum', r? r.time:'-']); });
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Absensi');
-  XLSX.writeFile(wb,`absensi_${dateKey}.xlsx`);
-}
-
-function exportPDF(){
-  const dateKey = document.getElementById('attendance-date').value||new Date().toISOString().slice(0,10);
-  const att = state.attendance[dateKey]||{};
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.setFontSize(14); doc.text(state.settings.school,14,16);
-  doc.setFontSize(10); doc.text('Absensi '+dateKey,14,24);
-  let y=32; doc.setFontSize(9);
-  doc.text('ID',14,y); doc.text('Nama',46,y); doc.text('Status',140,y); y+=6;
-  state.students.forEach(s=>{
-    const r = att[s.id]; const status = r? r.status:'belum'; const time = r? r.time:'-';
-    if(y>270){ doc.addPage(); y=20; }
-    doc.text(s.id.toString(),14,y); doc.text(s.name.toString(),46,y); doc.text(status,140,y);
-    y+=6;
-  });
-  doc.save(`absensi_${dateKey}.pdf`);
-}
-
-document.getElementById('export-excel').addEventListener('click',exportExcel);
-document.getElementById('export-pdf').addEventListener('click',exportPDF);
 
 // --- Settings ---
-document.getElementById('btn-settings').addEventListener('click',()=>{ document.getElementById('settings').style.display='block'; });
-document.getElementById('close-settings').addEventListener('click',()=>{ document.getElementById('settings').style.display='none'; });
-
-document.getElementById('logo-upload').addEventListener('change',async(e)=>{
-  const f=e.target.files[0]; if(!f) return; const data = await f.arrayBuffer(); const blob = new Blob([data]); const url = URL.createObjectURL(blob);
-  // convert to base64 to store
-  const reader = new FileReader(); reader.onload = ()=>{
-    state.settings.logo = reader.result; saveState(state); renderSettings(); }
-  reader.readAsDataURL(f);
-});
-
-document.getElementById('save-settings').addEventListener('click',()=>{
-  state.settings.school = document.getElementById('input-school').value||state.settings.school;
-  state.settings.guru = document.getElementById('input-guru').value||state.settings.guru;
-  state.settings.kepala = document.getElementById('input-kepala').value||state.settings.kepala;
-  saveState(state); renderSettings(); alert('Setelan tersimpan');
-});
-
-// --- Logout ---
-document.getElementById('btn-logout').addEventListener('click',()=>{ localStorage.removeItem(LS_PREFIX+'logged'); location.reload(); });
-
-// --- Utils ---
-function generateDemoData(){
-  state.students = [
-    {id:'S001',name:'Andi'}, {id:'S002',name:'Budi'}, {id:'S003',name:'Citra'}
-  ]; saveState(state); renderAll();
+function uploadLogo(e){
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader(); reader.onload = ev=>{
+    settings.logo = ev.target.result; save(STORAGE_KEYS.settings, settings); renderSettings(); applySettings();
+  }
+  reader.readAsDataURL(f)
+}
+function renderSettings(){
+  document.getElementById('logoPreview').src = settings.logo || ''
+  document.getElementById('inpSchoolName').value = settings.schoolName || ''
+  document.getElementById('inpTeacher').value = settings.teacher || ''
+  document.getElementById('inpHeadmaster').value = settings.headmaster || ''
+}
+function saveSettings(){
+  settings.schoolName = document.getElementById('inpSchoolName').value
+  settings.teacher = document.getElementById('inpTeacher').value
+  settings.headmaster = document.getElementById('inpHeadmaster').value
+  save(STORAGE_KEYS.settings, settings)
+  applySettings();
+  alert('Disimpan')
+}
+function applySettings(){
+  document.getElementById('schoolName').innerText = settings.schoolName || 'Nama Sekolah'
+  document.getElementById('schoolSub').innerText = `Kepala Sekolah: ${settings.headmaster || '-'} | Guru: ${settings.teacher || '-'}`
+  document.getElementById('sideLogo').src = settings.logo || ''
+  document.getElementById('loginLogo').src = settings.logo || ''
+  document.getElementById('logoPreview').src = settings.logo || ''
 }
 
-// demo helper on first run
-if(state.students.length===0){ /* generateDemoData(); */ }
+function resetData(){ if(confirm('Reset semua data (siswa, absensi, setelan)?')){ localStorage.clear(); students=[]; attendance=[]; settings={schoolName:'SMA Contoh',teacher:'-',headmaster:'-',logo:''}; save(STORAGE_KEYS.students,students); save(STORAGE_KEYS.attendance,attendance); save(STORAGE_KEYS.settings,settings); renderStudents(); renderAttendance(); renderSettings(); applySettings(); alert('Sudah direset') } }
 
-// initial render
-renderAll();
+// --- Export Excel / PDF ---
+function exportExcel(){
+  // make worksheet from attendance
+  const wb = XLSX.utils.book_new()
+  const data = attendance.map(a=>({Waktu: a.time, ID: a.id, Nama: a.name, Status: a.status}))
+  const ws = XLSX.utils.json_to_sheet(data)
+  XLSX.utils.book_append_sheet(wb, ws, 'Absensi')
+  XLSX.writeFile(wb, 'absensi.xlsx')
+}
+
+async function exportPDF(){
+  const { jsPDF } = window.jspdf
+  const doc = new jsPDF()
+  doc.setFontSize(12)
+  doc.text(settings.schoolName || 'Sekolah', 14, 16)
+  let y=26
+  doc.setFontSize(10)
+  doc.text('Rekap Absensi', 14, y); y+=6
+  const rows = attendance.slice().reverse().map(a=>[new Date(a.time).toLocaleString(), a.id, a.name, a.status])
+  const colWidths = [50,30,60,30]
+  // simple table render
+  rows.forEach(r=>{
+    if(y>280){ doc.addPage(); y=20 }
+    doc.text(r[0], 14, y)
+    doc.text(r[1], 70, y)
+    doc.text(r[2], 100, y)
+    doc.text(r[3], 160, y)
+    y+=6
+  })
+  doc.save('absensi.pdf')
+}
+
+// --- Init app on successful login ---
+function initApp(){ applySettings(); renderStudents(); renderAttendance(); }
+
+// apply if already logged in? we'll always show login first
+
+// expose some functions to window for inline onclick
+window.addStudent = addStudent
+window.removeStudent = removeStudent
+window.handleCSVUpload = handleCSVUpload
+window.recordAttendance = recordAttendance
+window.exportExcel = exportExcel
+window.exportPDF = exportPDF
+window.uploadLogo = uploadLogo
+window.saveSettings = saveSettings
+window.resetData = resetData
+window.show = show
+window.logout = logout
+
 </script>
 </body>
 </html>
