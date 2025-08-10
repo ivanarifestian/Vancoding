@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>VAN ABSENSI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Tosca Gradient CSS -->
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #FFF8DC 0%, #1abc9c 100%);
+            min-height: 100vh;
+        }
+        .login-container, .main-container, .settings-container {
+            max-width: 400px;
+            margin: 50px auto 0 auto;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 6px 24px rgba(22,160,133,0.15);
+            padding: 30px;
+        }
+        .logo {
+            display: block;
+            margin: 0 auto 15px auto;
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        h2 {
+            color: #16a085;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            color: #333;
+        }
+        input[type="text"], input[type="password"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 7px;
+            margin-top: 4px;
+        }
+        button, .btn {
+            background: linear-gradient(90deg, #16a085 30%, #1abc9c 100%);
+            color: white;
+            border: none;
+            border-radius: 7px;
+            padding: 10px 18px;
+            margin: 8px 4px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover, .btn:hover {
+            filter: brightness(0.93);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+            background: #f6fffa;
+        }
+        th, td {
+            border: 1px solid #b2dfdb;
+            padding: 8px 5px;
+            text-align: center;
+        }
+        th {
+            background: #1abc9c;
+            color: white;
+        }
+        .qr-container {
+            margin: 0 auto;
+            display: inline-block;
+        }
+        .hide {
+            display: none;
+        }
+        .settings-link {
+            float: right;
+            color: #16a085;
+            font-size: 14px;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .download-btns {
+            margin-top: 15px;
+            text-align: center;
+        }
+    </style>
+    <!-- QR Code & FileSaver.js & SheetJS -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+    <!-- Login Page -->
+    <div class="login-container" id="login-page">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Logo_SMK.png" id="school-logo" class="logo" alt="Logo Sekolah">
+        <h2 id="school-name">SMK Vancoding</h2>
+        <form id="login-form">
+            <label>Username</label>
+            <input type="text" id="username" required autocomplete="username">
+            <label>Password</label>
+            <input type="password" id="password" required autocomplete="current-password">
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    <!-- Main App -->
+    <div class="main-container hide" id="main-page">
+        <span class="settings-link" onclick="showSettings()">Setelan</span>
+        <img id="main-logo" class="logo" src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Logo_SMK.png" alt="Logo Sekolah">
+        <h2 id="main-school-name">SMK Vancoding</h2>
+        <p>Guru: <span id="teacher-name">Bapak/Ibu Guru</span> &nbsp;|&nbsp; Kepala Sekolah: <span id="principal-name">Kepala Sekolah</span></p>
+        <form id="add-student-form" style="margin-top:18px;">
+            <label>Nama Siswa</label>
+            <input type="text" id="student-name" required>
+            <button type="submit">Tambah Siswa</button>
+            <button type="button" onclick="addDummyStudents()">+10 Random</button>
+        </form>
+        <table id="students-table">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama</th>
+                    <th>QR Absen</th>
+                    <th>Absen</th>
+                    <th>Hapus</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Siswa akan muncul di sini -->
+            </tbody>
+        </table>
+        <div class="download-btns">
+            <button onclick="downloadExcel()">Unduh Excel</button>
+            <button onclick="downloadPDF()">Unduh PDF</button>
+        </div>
+    </div>
+    <!-- Settings Page -->
+    <div class="settings-container hide" id="settings-page">
+        <h2>Setelan Aplikasi</h2>
+        <form id="settings-form">
+            <label>Ganti Logo Sekolah</label>
+            <input type="file" id="logo-input" accept="image/*">
+            <label>Nama Sekolah</label>
+            <input type="text" id="input-school-name" value="SMK Vancoding">
+            <label>Nama Guru</label>
+            <input type="text" id="input-teacher-name" value="Bapak/Ibu Guru">
+            <label>Nama Kepala Sekolah</label>
+            <input type="text" id="input-principal-name" value="Kepala Sekolah">
+            <button type="submit">Simpan & Kembali</button>
+        </form>
+    </div>
+    <!-- Modal QR -->
+    <div id="qr-modal" class="hide" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(30,210,180,0.40);z-index:99;justify-content:center;align-items:center;display:flex;">
+        <div style="background:#fff;padding:25px 30px;border-radius:14px;text-align:center;box-shadow:0 2px 14px #1abc9c;">
+            <div id="qr-code"></div>
+            <p id="qr-student-name"></p>
+            <button onclick="closeQR()">Tutup</button>
+        </div>
+    </div>
+    <!-- JavaScript Logic -->
+    <script>
+        // Simpan data di localStorage agar tetap tersimpan
+        const defaultSettings = {
+            schoolName: "SMK Vancoding",
+            teacherName: "Bapak/Ibu Guru",
+            principalName: "Kepala Sekolah",
+            logo: "https://upload.wikimedia.org/wikipedia/commons/6/6b/Logo_SMK.png"
+        };
+        let students = JSON.parse(localStorage.getItem("students")||"[]");
+        let settings = JSON.parse(localStorage.getItem("settings")||"null") || defaultSettings;
+
+        // --- LOGIN ---
+        const loginPage = document.getElementById('login-page');
+        const mainPage = document.getElementById('main-page');
+        const settingsPage = document.getElementById('settings-page');
+        const qrModal = document.getElementById('qr-modal');
+        document.getElementById('login-form').onsubmit = function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            if (user === 'Van64' && pass === 'Van1909') {
+                loginPage.classList.add('hide');
+                mainPage.classList.remove('hide');
+                loadSettings();
+                renderStudents();
+            } else {
+                alert('Username atau password salah!');
+            }
+        };
+
+        // --- SETTINGS ---
+        function showSettings() {
+            mainPage.classList.add('hide');
+            settingsPage.classList.remove('hide');
+            document.getElementById('input-school-name').value = settings.schoolName;
+            document.getElementById('input-teacher-name').value = settings.teacherName;
+            document.getElementById('input-principal-name').value = settings.principalName;
+        }
+        function loadSettings() {
+            document.getElementById('main-logo').src = settings.logo;
+            document.getElementById('main-school-name').textContent = settings.schoolName;
+            document.getElementById('school-logo').src = settings.logo;
+            document.getElementById('school-name').textContent = settings.schoolName;
+            document.getElementById('teacher-name').textContent = settings.teacherName;
+            document.getElementById('principal-name').textContent = settings.principalName;
+        }
+        document.getElementById('settings-form').onsubmit = function(e) {
+            e.preventDefault();
+            settings.schoolName = document.getElementById('input-school-name').value;
+            settings.teacherName = document.getElementById('input-teacher-name').value;
+            settings.principalName = document.getElementById('input-principal-name').value;
+            localStorage.setItem("settings", JSON.stringify(settings));
+            // Logo upload
+            const fileInput = document.getElementById('logo-input');
+            if (fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    settings.logo = event.target.result;
+                    localStorage.setItem("settings", JSON.stringify(settings));
+                    loadSettings();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                loadSettings();
+            }
+            settingsPage.classList.add('hide');
+            mainPage.classList.remove('hide');
+        };
+
+        // --- SISWA ---
+        function renderStudents() {
+            const tbody = document.querySelector('#students-table tbody');
+            tbody.innerHTML = "";
+            students.forEach((s, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${i+1}</td>
+                    <td>${s.name}</td>
+                    <td>
+                        <button onclick="showQR('${encodeURIComponent(s.name)}',${i+1})">QR</button>
+                    </td>
+                    <td>
+                        <input type="checkbox" ${s.absen?'checked':''} onchange="toggleAbsen(${i})">
+                    </td>
+                    <td>
+                        <button onclick="delStudent(${i})" style="background:#ff6e6e;">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            localStorage.setItem("students", JSON.stringify(students));
+        }
+        window.toggleAbsen = function(idx) {
+            students[idx].absen = !students[idx].absen;
+            renderStudents();
+        }
+        window.delStudent = function(idx) {
+            if(confirm("Hapus siswa ini?")) {
+                students.splice(idx,1);
+                renderStudents();
+            }
+        }
+
+        document.getElementById('add-student-form').onsubmit = function(e) {
+            e.preventDefault();
+            const name = document.getElementById('student-name').value.trim();
+            if (name.length < 2) return alert("Nama siswa minimal 2 karakter");
+            students.push({name, absen: false});
+            renderStudents();
+            document.getElementById('student-name').value="";
+        };
+        window.addDummyStudents = function() {
+            const names = ["Adit", "Budi", "Cici", "Dedi", "Eka", "Fira", "Gilang", "Hana", "Indra", "Joko"];
+            for(let i=0;i<10;i++) {
+                students.push({name: names[i]+" "+(Math.floor(Math.random()*99)+1), absen: false});
+            }
+            renderStudents();
+        }
+
+        // --- QR ---
+        window.showQR = function(nameEnc, no) {
+            const name = decodeURIComponent(nameEnc);
+            document.getElementById('qr-modal').classList.remove('hide');
+            document.getElementById('qr-student-name').textContent = `#${no} - ${name}`;
+            document.getElementById('qr-code').innerHTML = "";
+            // QR code data = Nama + Nomor urut
+            new QRCode(document.getElementById('qr-code'), {
+                text: JSON.stringify({no, name}),
+                width: 160, height: 160, colorDark: "#16a085", colorLight: "#fff"
+            });
+        }
+        window.closeQR = function() {
+            document.getElementById('qr-modal').classList.add('hide');
+        }
+
+        // --- DOWNLOAD EXCEL ---
+        window.downloadExcel = function() {
+            const rows = [["No", "Nama", "Absen"]];
+            students.forEach((s,i)=>rows.push([i+1, s.name, s.absen?"Hadir":"Tidak Hadir"]));
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Absensi");
+            XLSX.writeFile(wb, "absensi.xlsx");
+        }
+        // --- DOWNLOAD PDF (simple) ---
+        window.downloadPDF = function() {
+            // Pakai window.print() untuk PDF sederhana (tanpa QR)
+            let w = window.open("", "_blank");
+            w.document.write(`<html><head><title>Absensi</title></head><body>`);
+            w.document.write(`<h2>Daftar Absensi - ${settings.schoolName}</h2>`);
+            w.document.write(`<p>Guru: ${settings.teacherName} | Kepala Sekolah: ${settings.principalName}</p>`);
+            w.document.write(`<table border="1" style="border-collapse:collapse;width:100%"><tr><th>No</th><th>Nama</th><th>Absen</th></tr>`);
+            students.forEach((s,i)=>{
+                w.document.write(`<tr><td>${i+1}</td><td>${s.name}</td><td>${s.absen?"Hadir":"Tidak Hadir"}</td></tr>`);
+            });
+            w.document.write(`</table></body></html>`);
+            w.document.close();
+            w.print();
+        }
+
+        // --- INIT ---
+        loadSettings();
+        if(students.length>0) renderStudents();
+    </script>
+</body>
+</html>
