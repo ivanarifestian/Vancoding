@@ -3,386 +3,377 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Aplikasi Absensi Siswa - VAN KARTU</title>
-  <style>
-    :root{--tosca:#29b3a7;--blue:#0b76d1}
-    *{box-sizing:border-box;font-family:Inter,Segoe UI,Arial}
-    body{margin:0;background:#f6f8fb;color:#222}
-    .center{display:flex;align-items:center;justify-content:center}
-    /* Login */
-    .login-page{height:100vh;background:linear-gradient(135deg,var(--tosca),var(--blue));color:white}
-    .login-card{width:360px;background:rgba(255,255,255,0.06);padding:24px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2)}
-    .login-card h2{margin:6px 0 16px;font-weight:600}
-    .input{width:100%;padding:10px;border-radius:8px;border:0;margin-bottom:10px}
-    .btn{padding:10px 14px;border-radius:8px;border:0;cursor:pointer}
-    .btn-primary{background:white;color:var(--blue);font-weight:700}
-    .small{font-size:13px;opacity:0.9}
-
-    /* App layout */
-    .app{display:flex;height:100vh}
-    .sidebar{width:260px;background:white;padding:18px;border-right:1px solid #e6e9ef}
-    .main{flex:1;padding:18px;overflow:auto}
-    .card{background:white;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.04);margin-bottom:12px}
-    .h{font-weight:700;margin:0 0 8px}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:8px;border-bottom:1px solid #f0f2f5;text-align:left}
-    .flex{display:flex;gap:8px;align-items:center}
-    .qr-canvas{width:160px;height:160px}
-    .settings img{max-width:100%;height:80px;object-fit:contain}
-    .muted{color:#666;font-size:13px}
-    .danger{background:#ff605c;color:white}
-  </style>
+  <title>Aplikasi Absensi Siswa</title>
   <!-- Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root{--tosca:#2bb3a3;--muted:#666}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;margin:0;background:#f6fbfb;color:#111}
+    .center{display:flex;align-items:center;justify-content:center}
+    header{background:linear-gradient(90deg,var(--tosca),#12a08f);color:#fff;padding:12px 20px}
+    .container{max-width:1100px;margin:20px auto;padding:18px;background:#fff;border-radius:12px;box-shadow:0 6px 22px rgba(10,10,10,.06)}
+    .login-box{max-width:420px;margin:60px auto;padding:28px;border-radius:10px;background:linear-gradient(180deg,#eafaf8,#ffffff)}
+    label{display:block;margin:8px 0 6px;font-weight:600}
+    input[type=text],input[type=password],select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #d6eae6}
+    button{background:var(--tosca);color:#fff;padding:10px 14px;border:0;border-radius:8px;cursor:pointer}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+    .muted{color:var(--muted)}
+    .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .logo-preview{height:56px;border-radius:6px;object-fit:contain}
+    .small{font-size:.9rem}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+    .card{padding:12px;border-radius:10px;border:1px solid #eefaf8}
+    .qr-box{background:#fff;padding:8px;border-radius:10px}
+    .btn-ghost{background:transparent;color:var(--tosca);border:1px solid var(--tosca)}
+    .status-hadir{color:green;font-weight:700}
+    .status-izin{color:orange;font-weight:700}
+    .status-sakit{color:#ff7a7a;font-weight:700}
+    .status-bolos{color:#999;font-weight:700}
+    footer{margin-top:18px;color:#777;font-size:.9rem}
+  </style>
 </head>
 <body>
-
-<!-- LOGIN PAGE -->
-<div id="loginPage" class="login-page center">
-  <div class="login-card">
-    <div style="text-align:center;margin-bottom:12px">
-      <img id="loginLogo" src="" alt="Logo Sekolah" style="height:68px;object-fit:contain;margin-bottom:8px">
-      <h2>Admin VAN KARTU</h2>
-    </div>
-    <div>
-      <input id="username" class="input" placeholder="Username" value="Van64">
-      <input id="password" type="password" class="input" placeholder="Password" value="Van1909">
-      <button id="loginBtn" class="btn btn-primary" style="width:100%">Masuk</button>
-      <p class="small" style="margin-top:8px">Gunakan Username: <b>Van64</b> Password: <b>Van1909</b></p>
-    </div>
-  </div>
-</div>
-
-<!-- APP -->
-<div id="app" class="app" style="display:none">
-  <div class="sidebar">
-    <div style="text-align:center;margin-bottom:12px">
-      <img id="sideLogo" src="" alt="Logo" style="height:64px;object-fit:contain">
-      <h3 id="schoolName">Nama Sekolah</h3>
-      <p class="muted" id="schoolSub">Kepala Sekolah: - | Guru: -</p>
-    </div>
-
-    <div class="card">
-      <h4 class="h">Menu</h4>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn" onclick="show('students')">Siswa</button>
-        <button class="btn" onclick="show('attendance')">Absensi</button>
-        <button class="btn" onclick="show('scanner')">Pindai QR</button>
-        <button class="btn" onclick="show('settings')">Setelan</button>
-        <button class="btn danger" onclick="logout()">Keluar</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h4 class="h">Unduh</h4>
-      <div class="flex" style="flex-direction:column">
-        <button class="btn" onclick="exportExcel()">Download Excel</button>
-        <button class="btn" onclick="exportPDF()">Download PDF</button>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="main">
-    <!-- STUDENTS -->
-    <div id="view-students" class="card" style="display:none">
-      <h3 class="h">Daftar Siswa</h3>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input id="newName" class="input" placeholder="Nama siswa">
-        <input id="newId" class="input" placeholder="ID unik (mis. NIS)">
-        <button class="btn btn-primary" onclick="addStudent()">Tambah</button>
-      </div>
-      <div style="margin-bottom:8px">
-        <label class="small">Tambah otomatis (CSV):</label>
-        <input type="file" id="csvUpload" accept=".csv" onchange="handleCSVUpload(event)">
-      </div>
-      <table id="studentsTable">
-        <thead><tr><th>ID</th><th>Nama</th><th>QR</th><th>Aksi</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <!-- ATTENDANCE -->
-    <div id="view-attendance" class="card" style="display:none">
-      <h3 class="h">Rekap Absensi</h3>
-      <div style="margin-bottom:8px">
-        <input type="date" id="filterDate" onchange="renderAttendance()"> 
-      </div>
-      <table id="attendanceTable">
-        <thead><tr><th>Waktu</th><th>ID</th><th>Nama</th><th>Status</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <!-- SCANNER -->
-    <div id="view-scanner" class="card" style="display:none">
-      <h3 class="h">Pindai QR (Siswa)</h3>
-      <div id="qr-reader" style="width:100%"></div>
-      <p class="muted">Catatan: scanner membutuhkan akses kamera. Buka lewat HTTPS atau localhost untuk camera access.</p>
-    </div>
-
-    <!-- SETTINGS -->
-    <div id="view-settings" class="card settings" style="display:none">
-      <h3 class="h">Setelan</h3>
+  <header>
+    <div class="container topbar">
       <div style="display:flex;gap:12px;align-items:center">
-        <div style="flex:1">
-          <label class="small">Upload Logo Sekolah (akan tersimpan di browser)</label>
-          <input type="file" id="logoUpload" accept="image/*" onchange="uploadLogo(event)">
-        </div>
-        <div style="width:220px;text-align:center">
-          <img id="logoPreview" src="" alt="Preview logo" style="height:80px;object-fit:contain">
+        <img id="logoHeader" src="" alt="logo sekolah" class="logo-preview" onerror="this.style.display='none'">
+        <div>
+          <div id="schoolName" style="font-weight:800;font-size:1.1rem">[Nama Sekolah]</div>
+          <div class="small muted" id="schoolSubtitle">Aplikasi Absensi Siswa</div>
         </div>
       </div>
-      <div style="margin-top:12px">
-        <label class="small">Nama Sekolah</label>
-        <input id="inpSchoolName" class="input">
-        <label class="small">Nama Guru</label>
-        <input id="inpTeacher" class="input">
-        <label class="small">Nama Kepala Sekolah</label>
-        <input id="inpHeadmaster" class="input">
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="btn btn-primary" onclick="saveSettings()">Simpan</button>
-          <button class="btn" onclick="resetData()">Reset Data (bersihkan storage)</button>
+      <div>
+        <span class="muted">Kelola absensi mudah & cepat</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" id="mainApp">
+
+    <!-- Login screen -->
+    <div id="loginScreen" class="login-box center" style="flex-direction:column">
+      <h2 style="margin:0 0 6px">Login Admin</h2>
+      <p class="muted small">Masuk sebagai admin untuk mengelola absensi</p>
+      <div style="width:100%">
+        <label>Username</label>
+        <input id="loginUser" type="text" value="" placeholder="Username admin" />
+        <label>Password</label>
+        <input id="loginPass" type="password" value="" placeholder="Password admin" />
+        <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+          <button id="btnLogin">Masuk</button>
+          <div class="muted small">Username: <strong>Van64</strong> Password: <strong>Van1909</strong></div>
         </div>
       </div>
     </div>
 
-  </div>
-</div>
+    <!-- Dashboard -->
+    <div id="dashboard" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2>Dashboard Admin</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-ghost" id="btnLogout">Logout</button>
+        </div>
+      </div>
 
-<script>
-// --- Storage helpers ---
-const STORAGE_KEYS = {
-  students: 'van_students_v1',
-  attendance: 'van_attendance_v1',
-  settings: 'van_settings_v1'
-}
+      <div class="grid">
+        <div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <h3 style="margin:0">Daftar Siswa</h3>
+              <div class="muted small">Total: <span id="totalStudents">0</span></div>
+            </div>
 
-function load(key, fallback){
-  try{ const s = localStorage.getItem(key); return s? JSON.parse(s): fallback }
-  catch(e){ return fallback }
-}
-function save(key, val){ localStorage.setItem(key, JSON.stringify(val)) }
+            <div style="margin-top:12px;display:flex;gap:8px">
+              <input id="inputNama" placeholder="Nama siswa" />
+              <input id="inputNIS" placeholder="NIS (unique)" />
+              <button id="btnAddManual">Tambah</button>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:8px">
+              <input type="file" id="fileStudents" accept=".csv" />
+              <button id="btnImportCsv" class="btn-ghost">Import CSV (otomatis)</button>
+              <button id="btnGenerateQRCodes" class="btn-ghost">Generate QR</button>
+            </div>
 
-// default settings
-let settings = load(STORAGE_KEYS.settings, {
-  schoolName: 'SMA Contoh', teacher: '-', headmaster: '-', logo: ''
-})
-let students = load(STORAGE_KEYS.students, [])
-let attendance = load(STORAGE_KEYS.attendance, [])
+            <div style="margin-top:12px;overflow:auto;max-height:320px">
+              <table>
+                <thead><tr><th>QR</th><th>NIS</th><th>Nama</th><th>Status</th><th>Aksi</th></tr></thead>
+                <tbody id="studentsTable"></tbody>
+              </table>
+            </div>
 
-// --- Login ---
-const ADMIN_USER = 'Van64'
-const ADMIN_PASS = 'Van1909'
-const loginPage = document.getElementById('loginPage')
-const app = document.getElementById('app')
+            <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+              <button id="btnMarkAbsent" class="btn-ghost">Tandai sisa sebagai Bolos</button>
+              <button id="btnExportExcel">Unduh Excel</button>
+              <button id="btnExportPdf">Unduh PDF</button>
+            </div>
+          </div>
 
-function showLogin(){ loginPage.style.display='flex'; app.style.display='none' }
-function showApp(){ loginPage.style.display='none'; app.style.display='flex'; show('students') }
+          <div class="card" style="margin-top:12px">
+            <h3 style="margin:0">Scan QR (Simulasi siswa)</h3>
+            <p class="muted small">Gunakan kamera untuk scan QR yang berisi NIS siswa. Saat berhasil scan, otomatis ter-record hadir.</p>
+            <div id="reader" style="width:100%"></div>
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button id="btnStartScan" class="btn-ghost">Mulai Scan</button>
+              <button id="btnStopScan" class="btn-ghost">Stop Scan</button>
+            </div>
+          </div>
+        </div>
 
-document.getElementById('loginBtn').addEventListener('click', ()=>{
-  const u = document.getElementById('username').value.trim()
-  const p = document.getElementById('password').value
-  if(u===ADMIN_USER && p===ADMIN_PASS){ initApp(); showApp(); }
-  else alert('Username atau password salah')
-})
+        <div>
+          <div class="card">
+            <h3>Pengaturan</h3>
+            <label>Upload Logo Sekolah</label>
+            <input type="file" id="logoUpload" accept="image/*" />
+            <label>Nama Sekolah</label>
+            <input id="setSchoolName" placeholder="Nama Sekolah" />
+            <label>Nama Guru</label>
+            <input id="setTeacherName" placeholder="Nama Guru" />
+            <label>Nama Kepala Sekolah</label>
+            <input id="setPrincipalName" placeholder="Nama Kepala Sekolah" />
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button id="btnSaveSettings">Simpan</button>
+              <button id="btnResetSettings" class="btn-ghost">Reset</button>
+            </div>
+            <hr style="margin:12px 0">
+            <h4>Preview QR Siswa</h4>
+            <div id="qrPreview" class="qr-box center" style="padding:12px"></div>
+            <small class="muted">QR berisi NIS siswa — siswa dapat scan menggunakan fitur scan di atas.</small>
+          </div>
 
-function logout(){ if(confirm('Keluar dari admin?')) showLogin() }
+          <div class="card" style="margin-top:12px">
+            <h3>Informasi Sekolah</h3>
+            <p><strong>Guru:</strong> <span id="previewTeacher">-</span></p>
+            <p><strong>Kepala Sekolah:</strong> <span id="previewPrincipal">-</span></p>
+            <p class="muted small">Semua data disimpan di browser (localStorage). Untuk deployment gunakan backend nyata agar data tersimpan permanen dan lebih aman.</p>
+          </div>
+        </div>
+      </div>
 
-// --- UI navigation ---
-function show(view){
-  document.querySelectorAll('[id^="view-"]').forEach(el=>el.style.display='none')
-  document.getElementById('view-'+view).style.display='block'
-  if(view==='students') renderStudents()
-  if(view==='attendance') renderAttendance()
-  if(view==='scanner') startScanner()
-  if(view==='settings') renderSettings()
-}
+      <footer>
+        <div class="muted small">Dibuat sederhana - fitur dasar: tambah siswa manual, import CSV, scan QR, export Excel & PDF, upload logo, edit nama.</div>
+      </footer>
+    </div>
+  </main>
 
-// --- Students ---
-function addStudent(){
-  const name = document.getElementById('newName').value.trim()
-  const id = document.getElementById('newId').value.trim()
-  if(!name || !id){ alert('Isi nama dan ID'); return }
-  if(students.find(s=>s.id===id)){ alert('ID sudah ada'); return }
-  students.push({id,name})
-  save(STORAGE_KEYS.students, students)
-  document.getElementById('newName').value=''
-  document.getElementById('newId').value=''
-  renderStudents()
-}
+  <script>
+    // --- Utility & Storage ---
+    const ADMIN_USER = 'Van64', ADMIN_PASS = 'Van1909';
+    const STORAGE_KEY = 'absensi_app_v1';
 
-function removeStudent(id){ if(!confirm('Hapus siswa?')) return; students = students.filter(s=>s.id!==id); save(STORAGE_KEYS.students, students); renderStudents(); }
+    function loadData(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return {students:[],settings:{schoolName:'[Nama Sekolah]',teacher:'-',principal:'-',logo:''}, attendance:{}};
+      try{ return JSON.parse(raw);}catch(e){return {students:[],settings:{},attendance:{}}}
+    }
+    function saveData(state){ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }
 
-function renderStudents(){
-  const tbody = document.querySelector('#studentsTable tbody')
-  tbody.innerHTML=''
-  students.forEach(s=>{
-    const tr = document.createElement('tr')
-    tr.innerHTML = `<td>${s.id}</td><td>${s.name}</td><td><div id="qr-${s.id}"></div></td><td><button onclick="removeStudent('${s.id}')">Hapus</button></td>`
-    tbody.appendChild(tr)
-    // generate QR
-    const qrEl = document.getElementById('qr-'+s.id)
-    qrEl.innerHTML = ''
-    new QRCode(qrEl, {text: s.id, width:120,height:120})
-  })
-}
+    let state = loadData();
+    // ensure structure
+    if(!state.students) state.students = [];
+    if(!state.settings) state.settings = {schoolName:'[Nama Sekolah]',teacher:'-',principal:'-',logo:''};
+    if(!state.attendance) state.attendance = {}; // object nis -> {status, time}
 
-// CSV upload: format: id,name
-function handleCSVUpload(e){
-  const f = e.target.files[0]; if(!f) return;
-  const reader = new FileReader()
-  reader.onload = ev=>{
-    const text = ev.target.result
-    const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean)
-    let added=0
-    lines.forEach(line=>{
-      const parts = line.split(',')
-      if(parts.length>=2){ const id=parts[0].trim(), name=parts.slice(1).join(',').trim(); if(id && name && !students.find(s=>s.id===id)){ students.push({id,name}); added++ } }
-    })
-    save(STORAGE_KEYS.students, students)
-    alert('Ditambahkan '+added+' siswa')
-    renderStudents()
-  }
-  reader.readAsText(f)
-}
+    // --- UI references ---
+    const loginScreen = document.getElementById('loginScreen');
+    const dashboard = document.getElementById('dashboard');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnLogout = document.getElementById('btnLogout');
+    const totalStudents = document.getElementById('totalStudents');
+    const studentsTable = document.getElementById('studentsTable');
+    const inputNama = document.getElementById('inputNama');
+    const inputNIS = document.getElementById('inputNIS');
+    const btnAddManual = document.getElementById('btnAddManual');
+    const fileStudents = document.getElementById('fileStudents');
+    const btnImportCsv = document.getElementById('btnImportCsv');
+    const btnGenerateQRCodes = document.getElementById('btnGenerateQRCodes');
+    const btnMarkAbsent = document.getElementById('btnMarkAbsent');
+    const btnExportExcel = document.getElementById('btnExportExcel');
+    const btnExportPdf = document.getElementById('btnExportPdf');
+    const logoUpload = document.getElementById('logoUpload');
+    const setSchoolName = document.getElementById('setSchoolName');
+    const setTeacherName = document.getElementById('setTeacherName');
+    const setPrincipalName = document.getElementById('setPrincipalName');
+    const btnSaveSettings = document.getElementById('btnSaveSettings');
+    const btnResetSettings = document.getElementById('btnResetSettings');
+    const logoHeader = document.getElementById('logoHeader');
+    const schoolNameEl = document.getElementById('schoolName');
+    const previewTeacher = document.getElementById('previewTeacher');
+    const previewPrincipal = document.getElementById('previewPrincipal');
+    const qrPreview = document.getElementById('qrPreview');
 
-// --- Attendance ---
-function recordAttendance(id, status='Hadir'){
-  const s = students.find(x=>x.id===id)
-  if(!s){ alert('Siswa tidak ditemukan: '+id); return }
-  const now = new Date()
-  const rec = {time: now.toISOString(), id: s.id, name: s.name, status}
-  attendance.push(rec)
-  save(STORAGE_KEYS.attendance, attendance)
-  renderAttendance()
-}
+    // --- Login handling ---
+    btnLogin.addEventListener('click', ()=>{
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value.trim();
+      if(u===ADMIN_USER && p===ADMIN_PASS){
+        loginScreen.style.display='none';
+        dashboard.style.display='block';
+        renderAll();
+      } else alert('Username atau password salah');
+    });
+    btnLogout.addEventListener('click', ()=>{ dashboard.style.display='none'; loginScreen.style.display='flex'; });
 
-function renderAttendance(){
-  const tbody = document.querySelector('#attendanceTable tbody')
-  tbody.innerHTML=''
-  const dateFilter = document.getElementById('filterDate').value
-  const list = attendance.slice().reverse()
-  list.forEach(a=>{
-    if(dateFilter){ const d = a.time.slice(0,10); if(d!==dateFilter) return }
-    const tr = document.createElement('tr')
-    tr.innerHTML = `<td>${new Date(a.time).toLocaleString()}</td><td>${a.id}</td><td>${a.name}</td><td>${a.status}</td>`
-    tbody.appendChild(tr)
-  })
-}
+    // --- Students management ---
+    function renderStudents(){
+      studentsTable.innerHTML='';
+      state.students.forEach(s=>{
+        const tr=document.createElement('tr');
+        const qrTd=document.createElement('td');
+        const canvas=document.createElement('div'); canvas.style.width='64px'; canvas.style.height='64px';
+        new QRCode(canvas, {text: s.nis, width:64, height:64, correctLevel: QRCode.CorrectLevel.H});
+        qrTd.appendChild(canvas);
+        tr.appendChild(qrTd);
+        tr.innerHTML += `<td>${s.nis}</td><td>${s.nama}</td>`;
+        const att = state.attendance[s.nis];
+        const statusTd = document.createElement('td');
+        statusTd.innerHTML = att ? (att.status=='Hadir'?`<span class="status-hadir">Hadir<br><small class="muted">${att.time}</small></span>`:
+          att.status=='Izin'?`<span class="status-izin">Izin</span>`:
+          att.status=='Sakit'?`<span class="status-sakit">Sakit</span>`:`<span class="status-bolos">Bolos</span>`) : '<span class="muted">Belum</span>';
+        tr.appendChild(statusTd);
+        const actionTd = document.createElement('td');
+        actionTd.innerHTML = `<button class="btn-ghost" data-nis="${s.nis}" onclick="markStatus('${s.nis}','Hadir')">Hadir</button>
+                              <button class="btn-ghost" data-nis="${s.nis}" onclick="markStatus('${s.nis}','Izin')">Izin</button>
+                              <button class="btn-ghost" data-nis="${s.nis}" onclick="markStatus('${s.nis}','Sakit')">Sakit</button>
+                              <button class="btn-ghost" data-nis="${s.nis}" onclick="deleteStudent('${s.nis}')">Hapus</button>`;
+        tr.appendChild(actionTd);
+        studentsTable.appendChild(tr);
+      });
+      totalStudents.textContent = state.students.length;
+      // update preview texts
+      schoolNameEl.textContent = state.settings.schoolName || '[Nama Sekolah]';
+      previewTeacher.textContent = state.settings.teacher || '-';
+      previewPrincipal.textContent = state.settings.principal || '-';
+      if(state.settings.logo){ logoHeader.src = state.settings.logo; logoHeader.style.display='inline-block'; } else logoHeader.style.display='none';
+    }
 
-// --- Scanner ---
-let html5QrScanner = null
-function startScanner(){
-  const qrReader = document.getElementById('qr-reader')
-  qrReader.innerHTML=''
-  if(html5QrScanner){ html5QrScanner.clear().catch(()=>{}); html5QrScanner = null }
-  html5QrScanner = new Html5Qrcode("qr-reader")
-  Html5Qrcode.getCameras().then(devices=>{
-    const camId = (devices && devices[0] && devices[0].id) || null
-    html5QrScanner.start(camId, {fps:10,qrbox:250}, qrCodeMessage=>{
-      // on success
-      // by default mark as Hadir; offer option to change
-      if(confirm('QR terdeteksi: '+qrCodeMessage+"\nTandai sebagai hadir? (OK=Hadir, Cancel=Ubah)")){
-        recordAttendance(qrCodeMessage,'Hadir')
-        alert('Absensi hadir tercatat')
-      } else {
-        const st = prompt('Masukkan keterangan (Hadir / Izin / Sakit)', 'Izin')
-        if(st) { recordAttendance(qrCodeMessage, st); alert('Absensi tercatat: '+st) }
+    window.markStatus = function(nis,status){
+      state.attendance[nis] = {status, time: new Date().toLocaleString()};
+      saveData(state); renderStudents();
+    }
+    window.deleteStudent = function(nis){
+      if(!confirm('Hapus siswa NIS '+nis+' ?')) return;
+      state.students = state.students.filter(s=>s.nis!==nis);
+      delete state.attendance[nis]; saveData(state); renderStudents();
+    }
+
+    btnAddManual.addEventListener('click', ()=>{
+      const nama = inputNama.value.trim(); const nis = inputNIS.value.trim();
+      if(!nama||!nis){ alert('Isi NIS dan Nama.'); return; }
+      if(state.students.find(s=>s.nis===nis)){ alert('NIS sudah ada'); return; }
+      state.students.push({nis,nama}); saveData(state); inputNama.value=''; inputNIS.value=''; renderStudents();
+    });
+
+    btnImportCsv.addEventListener('click', ()=>{
+      const f = fileStudents.files[0];
+      if(!f){ alert('Pilih file CSV terlebih dahulu (format: nis,nama)'); return; }
+      const reader = new FileReader();
+      reader.onload = e=>{
+        const text = e.target.result; const rows = text.split(/\r?\n/).filter(Boolean);
+        rows.forEach(r=>{ const [nis,nama]=r.split(','); if(nis && nama && !state.students.find(s=>s.nis===nis.trim())) state.students.push({nis:nis.trim(), nama:nama.trim()}); });
+        saveData(state); renderStudents(); alert('Import selesai');
       }
-    }, errorMessage=>{
-      // ignore per-frame errors
-    }).catch(err=>{ console.error(err); qrReader.innerHTML = '<p class="muted">Gagal mengaktifkan kamera. Pastikan halaman dibuka via HTTPS atau localhost dan beri izin kamera.</p>' })
-  }).catch(err=>{
-    qrReader.innerHTML = '<p class="muted">Tidak ada kamera terdeteksi atau akses ditolak.</p>'
-  })
-}
+      reader.readAsText(f,'UTF-8');
+    });
 
-// --- Settings ---
-function uploadLogo(e){
-  const f = e.target.files[0]; if(!f) return;
-  const reader = new FileReader(); reader.onload = ev=>{
-    settings.logo = ev.target.result; save(STORAGE_KEYS.settings, settings); renderSettings(); applySettings();
-  }
-  reader.readAsDataURL(f)
-}
-function renderSettings(){
-  document.getElementById('logoPreview').src = settings.logo || ''
-  document.getElementById('inpSchoolName').value = settings.schoolName || ''
-  document.getElementById('inpTeacher').value = settings.teacher || ''
-  document.getElementById('inpHeadmaster').value = settings.headmaster || ''
-}
-function saveSettings(){
-  settings.schoolName = document.getElementById('inpSchoolName').value
-  settings.teacher = document.getElementById('inpTeacher').value
-  settings.headmaster = document.getElementById('inpHeadmaster').value
-  save(STORAGE_KEYS.settings, settings)
-  applySettings();
-  alert('Disimpan')
-}
-function applySettings(){
-  document.getElementById('schoolName').innerText = settings.schoolName || 'Nama Sekolah'
-  document.getElementById('schoolSub').innerText = `Kepala Sekolah: ${settings.headmaster || '-'} | Guru: ${settings.teacher || '-'}`
-  document.getElementById('sideLogo').src = settings.logo || ''
-  document.getElementById('loginLogo').src = settings.logo || ''
-  document.getElementById('logoPreview').src = settings.logo || ''
-}
+    btnGenerateQRCodes.addEventListener('click', ()=>{
+      qrPreview.innerHTML='';
+      if(state.students.length===0){ alert('Belum ada siswa'); return; }
+      state.students.forEach(s=>{
+        const box=document.createElement('div'); box.style.margin='6px'; box.style.textAlign='center';
+        const c=document.createElement('div'); c.style.width='120px'; c.style.height='120px'; box.appendChild(c);
+        new QRCode(c,{text:s.nis,width:120,height:120});
+        const p=document.createElement('div'); p.textContent = s.nis+' - '+s.nama; p.style.fontSize='12px'; box.appendChild(p);
+        qrPreview.appendChild(box);
+      });
+    });
 
-function resetData(){ if(confirm('Reset semua data (siswa, absensi, setelan)?')){ localStorage.clear(); students=[]; attendance=[]; settings={schoolName:'SMA Contoh',teacher:'-',headmaster:'-',logo:''}; save(STORAGE_KEYS.students,students); save(STORAGE_KEYS.attendance,attendance); save(STORAGE_KEYS.settings,settings); renderStudents(); renderAttendance(); renderSettings(); applySettings(); alert('Sudah direset') } }
+    btnMarkAbsent.addEventListener('click', ()=>{
+      if(!confirm('Tandai semua siswa yang belum tercatat sebagai Bolos?')) return;
+      state.students.forEach(s=>{ if(!state.attendance[s.nis]) state.attendance[s.nis]={status:'Bolos',time:''}; });
+      saveData(state); renderStudents();
+    });
 
-// --- Export Excel / PDF ---
-function exportExcel(){
-  // make worksheet from attendance
-  const wb = XLSX.utils.book_new()
-  const data = attendance.map(a=>({Waktu: a.time, ID: a.id, Nama: a.name, Status: a.status}))
-  const ws = XLSX.utils.json_to_sheet(data)
-  XLSX.utils.book_append_sheet(wb, ws, 'Absensi')
-  XLSX.writeFile(wb, 'absensi.xlsx')
-}
+    // --- Export to Excel/PDF ---
+    btnExportExcel.addEventListener('click', ()=>{
+      const wb = XLSX.utils.book_new();
+      const rows = [['NIS','Nama','Status','Waktu']];
+      state.students.forEach(s=>{ const a = state.attendance[s.nis]; rows.push([s.nis,s.nama,a? a.status:'' , a? a.time:'']); });
+      const ws = XLSX.utils.aoa_to_sheet(rows); XLSX.utils.book_append_sheet(wb,ws,'Absensi');
+      const wbout = XLSX.write(wb,{bookType:'xlsx',type:'array'});
+      saveAs(new Blob([wbout],{type:'application/octet-stream'}),'absensi.xlsx');
+    });
 
-async function exportPDF(){
-  const { jsPDF } = window.jspdf
-  const doc = new jsPDF()
-  doc.setFontSize(12)
-  doc.text(settings.schoolName || 'Sekolah', 14, 16)
-  let y=26
-  doc.setFontSize(10)
-  doc.text('Rekap Absensi', 14, y); y+=6
-  const rows = attendance.slice().reverse().map(a=>[new Date(a.time).toLocaleString(), a.id, a.name, a.status])
-  const colWidths = [50,30,60,30]
-  // simple table render
-  rows.forEach(r=>{
-    if(y>280){ doc.addPage(); y=20 }
-    doc.text(r[0], 14, y)
-    doc.text(r[1], 70, y)
-    doc.text(r[2], 100, y)
-    doc.text(r[3], 160, y)
-    y+=6
-  })
-  doc.save('absensi.pdf')
-}
+    btnExportPdf.addEventListener('click', ()=>{
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(12); doc.text(state.settings.schoolName || 'Sekolah',14,18);
+      let y=28; doc.setFontSize(10);
+      doc.text('Laporan Absensi',14,y); y+=6;
+      doc.setFontSize(9);
+      doc.text('NIS - Nama - Status - Waktu',14,y); y+=6;
+      state.students.forEach(s=>{
+        const a=state.attendance[s.nis]; const line = `${s.nis} - ${s.nama} - ${a? a.status:''} - ${a? a.time:''}`;
+        if(y>270){ doc.addPage(); y=20; }
+        doc.text(line,14,y); y+=6;
+      });
+      doc.save('absensi.pdf');
+    });
 
-// --- Init app on successful login ---
-function initApp(){ applySettings(); renderStudents(); renderAttendance(); }
+    // --- Settings ---
+    btnSaveSettings.addEventListener('click', ()=>{
+      state.settings.schoolName = setSchoolName.value || '[Nama Sekolah]';
+      state.settings.teacher = setTeacherName.value || '-';
+      state.settings.principal = setPrincipalName.value || '-';
+      saveData(state); renderStudents(); alert('Disimpan');
+    });
+    btnResetSettings.addEventListener('click', ()=>{ if(confirm('Reset semua pengaturan ke default?')){ state.settings = {schoolName:'[Nama Sekolah]',teacher:'-',principal:'-',logo:''}; saveData(state); renderStudents(); } });
 
-// apply if already logged in? we'll always show login first
+    logoUpload.addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=e2=>{ state.settings.logo = e2.target.result; saveData(state); renderStudents(); }; r.readAsDataURL(f);
+    });
 
-// expose some functions to window for inline onclick
-window.addStudent = addStudent
-window.removeStudent = removeStudent
-window.handleCSVUpload = handleCSVUpload
-window.recordAttendance = recordAttendance
-window.exportExcel = exportExcel
-window.exportPDF = exportPDF
-window.uploadLogo = uploadLogo
-window.saveSettings = saveSettings
-window.resetData = resetData
-window.show = show
-window.logout = logout
+    // initialize settings inputs
+    function renderSettingsInputs(){ setSchoolName.value = state.settings.schoolName||''; setTeacherName.value = state.settings.teacher||''; setPrincipalName.value = state.settings.principal||''; }
 
-</script>
+    // --- QR Scanner ---
+    let html5QrcodeScanner = null;
+    const btnStartScan = document.getElementById('btnStartScan');
+    const btnStopScan = document.getElementById('btnStopScan');
+    btnStartScan.addEventListener('click', ()=>{
+      if(html5QrcodeScanner) return;
+      const qrRegionId = 'reader';
+      html5QrcodeScanner = new Html5Qrcode(qrRegionId);
+      Html5Qrcode.getCameras().then(cameras=>{
+        const cameraId = cameras && cameras.length? cameras[0].id : null;
+        if(!cameraId){ alert('Tidak ada kamera terdeteksi'); return; }
+        html5QrcodeScanner.start(cameraId, {fps:10, qrbox:250}, qrCodeMessage =>{
+          // qrCodeMessage contains NIS (we encoded NIS when generating QR)
+          const nis = qrCodeMessage.trim();
+          const student = state.students.find(s=>s.nis===nis);
+          if(!student){ alert('QR tidak terdaftar: '+nis); return; }
+          state.attendance[nis] = {status:'Hadir', time: new Date().toLocaleString()};
+          saveData(state); renderStudents();
+        }).catch(err=>{ console.error(err); alert('Gagal memulai kamera: '+err); });
+      }).catch(err=>{ alert('Gagal mengambil kamera: '+err); });
+    });
+    btnStopScan.addEventListener('click', ()=>{ if(html5QrcodeScanner){ html5QrcodeScanner.stop().then(()=>{ html5QrcodeScanner.clear(); html5QrcodeScanner=null; }).catch(e=>console.error(e)); } });
+
+    // --- Init render ---
+    function renderAll(){ renderStudents(); renderSettingsInputs(); }
+    // on load show saved data in header
+    renderStudents(); renderSettingsInputs();
+
+    // Auto-login convenience: if already logged in in this session localStorage flag (not secure)
+    // Not implemented for security - keep manual login.
+
+    // Simple help: import sample CSV
+    // Sample CSV format: 101,Andi\n102,Budi
+
+  </script>
 </body>
 </html>
