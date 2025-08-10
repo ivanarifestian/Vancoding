@@ -2,330 +2,758 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VAN ABSENSI</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Tosca Gradient CSS -->
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- QR Code generation library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    
+    <!-- QR Code scanning library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- PDF & Excel export libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
+        /* Custom styles */
         body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #FFF8DC 0%, #1abc9c 100%);
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
         }
-        .login-container, .main-container, .settings-container {
-            max-width: 400px;
-            margin: 50px auto 0 auto;
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 6px 24px rgba(22,160,133,0.15);
-            padding: 30px;
-        }
-        .logo {
-            display: block;
-            margin: 0 auto 15px auto;
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
-        }
-        h2 {
-            color: #16a085;
-            text-align: center;
-        }
-        label {
-            display: block;
-            margin-top: 10px;
-            color: #333;
-        }
-        input[type="text"], input[type="password"], input[type="number"] {
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 7px;
-            margin-top: 4px;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 40;
         }
-        button, .btn {
-            background: linear-gradient(90deg, #16a085 30%, #1abc9c 100%);
-            color: white;
-            border: none;
-            border-radius: 7px;
-            padding: 10px 18px;
-            margin: 8px 4px 0 0;
-            cursor: pointer;
-            font-weight: 600;
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
         }
-        button:hover, .btn:hover {
-            filter: brightness(0.93);
-        }
-        table {
+        #qr-reader {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 18px;
-            background: #f6fffa;
+            max-width: 500px;
+            border: 2px solid #34D399;
+            border-radius: 8px;
         }
-        th, td {
-            border: 1px solid #b2dfdb;
-            padding: 8px 5px;
-            text-align: center;
+        .sidebar-icon {
+            transition: all 0.2s ease-in-out;
         }
-        th {
-            background: #1abc9c;
-            color: white;
-        }
-        .qr-container {
-            margin: 0 auto;
-            display: inline-block;
-        }
-        .hide {
-            display: none;
-        }
-        .settings-link {
-            float: right;
-            color: #16a085;
-            font-size: 14px;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-        .download-btns {
-            margin-top: 15px;
-            text-align: center;
+        .sidebar-icon:hover {
+            transform: scale(1.1);
+            background-color: #0d9488;
         }
     </style>
-    <!-- QR Code & FileSaver.js & SheetJS -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
-<body>
+<body class="bg-gray-100">
+
     <!-- Login Page -->
-    <div class="login-container" id="login-page">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Logo_SMK.png" id="school-logo" class="logo" alt="Logo Sekolah">
-        <h2 id="school-name">SMK Vancoding</h2>
-        <form id="login-form">
-            <label>Username</label>
-            <input type="text" id="username" required autocomplete="username">
-            <label>Password</label>
-            <input type="password" id="password" required autocomplete="current-password">
-            <button type="submit">Login</button>
-        </form>
-    </div>
-    <!-- Main App -->
-    <div class="main-container hide" id="main-page">
-        <span class="settings-link" onclick="showSettings()">Setelan</span>
-        <img id="main-logo" class="logo" src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Logo_SMK.png" alt="Logo Sekolah">
-        <h2 id="main-school-name">SMK Vancoding</h2>
-        <p>Guru: <span id="teacher-name">Bapak/Ibu Guru</span> &nbsp;|&nbsp; Kepala Sekolah: <span id="principal-name">Kepala Sekolah</span></p>
-        <form id="add-student-form" style="margin-top:18px;">
-            <label>Nama Siswa</label>
-            <input type="text" id="student-name" required>
-            <button type="submit">Tambah Siswa</button>
-            <button type="button" onclick="addDummyStudents()">+10 Random</button>
-        </form>
-        <table id="students-table">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Nama</th>
-                    <th>QR Absen</th>
-                    <th>Absen</th>
-                    <th>Hapus</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Siswa akan muncul di sini -->
-            </tbody>
-        </table>
-        <div class="download-btns">
-            <button onclick="downloadExcel()">Unduh Excel</button>
-            <button onclick="downloadPDF()">Unduh PDF</button>
+    <div id="login-page" class="flex items-center justify-center h-screen bg-teal-500">
+        <div class="bg-white p-8 md:p-12 rounded-2xl shadow-2xl w-11/12 md:w-1/3 text-center">
+            <img id="login-logo" src="https://placehold.co/100x100/e2e8f0/4a5568?text=Logo" alt="Logo Sekolah" class="mx-auto mb-6 h-24 w-24 object-contain rounded-full">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Login Admin</h1>
+            <p class="text-gray-500 mb-8">Selamat datang di Aplikasi Absensi</p>
+            <form id="login-form">
+                <div class="mb-4">
+                    <input type="text" id="username" placeholder="Username" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div class="mb-6">
+                    <input type="password" id="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <button type="submit" class="w-full bg-teal-500 text-white font-bold py-3 rounded-lg hover:bg-teal-600 transition duration-300">Login</button>
+                <p id="login-error" class="text-red-500 mt-4 text-sm hidden">Username atau Password salah!</p>
+            </form>
         </div>
     </div>
-    <!-- Settings Page -->
-    <div class="settings-container hide" id="settings-page">
-        <h2>Setelan Aplikasi</h2>
-        <form id="settings-form">
-            <label>Ganti Logo Sekolah</label>
-            <input type="file" id="logo-input" accept="image/*">
-            <label>Nama Sekolah</label>
-            <input type="text" id="input-school-name" value="SMK Vancoding">
-            <label>Nama Guru</label>
-            <input type="text" id="input-teacher-name" value="Bapak/Ibu Guru">
-            <label>Nama Kepala Sekolah</label>
-            <input type="text" id="input-principal-name" value="Kepala Sekolah">
-            <button type="submit">Simpan & Kembali</button>
-        </form>
-    </div>
-    <!-- Modal QR -->
-    <div id="qr-modal" class="hide" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(30,210,180,0.40);z-index:99;justify-content:center;align-items:center;display:flex;">
-        <div style="background:#fff;padding:25px 30px;border-radius:14px;text-align:center;box-shadow:0 2px 14px #1abc9c;">
-            <div id="qr-code"></div>
-            <p id="qr-student-name"></p>
-            <button onclick="closeQR()">Tutup</button>
+
+    <!-- Main App Container -->
+    <div id="app-container" class="hidden">
+        <div class="flex h-screen">
+            <!-- Sidebar -->
+            <aside class="w-20 bg-teal-600 text-white flex flex-col items-center py-6 space-y-6 shadow-lg">
+                <img id="sidebar-logo" src="https://placehold.co/100x100/e2e8f0/4a5568?text=Logo" alt="Logo" class="h-12 w-12 rounded-full object-contain mb-4">
+                <button data-page="dashboard" class="nav-button p-3 rounded-lg sidebar-icon bg-teal-700" title="Dashboard">
+                    <i class="fas fa-tachometer-alt fa-lg"></i>
+                </button>
+                <button data-page="students" class="nav-button p-3 rounded-lg sidebar-icon" title="Data Siswa">
+                    <i class="fas fa-users fa-lg"></i>
+                </button>
+                <button data-page="scanner" class="nav-button p-3 rounded-lg sidebar-icon" title="Absensi QR">
+                    <i class="fas fa-qrcode fa-lg"></i>
+                </button>
+                <button data-page="settings" class="nav-button p-3 rounded-lg sidebar-icon" title="Pengaturan">
+                    <i class="fas fa-cog fa-lg"></i>
+                </button>
+                <button id="logout-button" class="mt-auto p-3 rounded-lg sidebar-icon" title="Keluar">
+                    <i class="fas fa-sign-out-alt fa-lg"></i>
+                </button>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6 md:p-8 overflow-y-auto">
+                <header class="mb-8">
+                    <h1 id="school-name-header" class="text-3xl font-bold text-gray-800">Nama Sekolah</h1>
+                    <p class="text-gray-500">Sistem Absensi Siswa Digital</p>
+                </header>
+
+                <!-- Dashboard Section -->
+                <section id="dashboard-section" class="page-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4">
+                            <div class="bg-blue-100 p-4 rounded-full"><i class="fas fa-users text-blue-500 fa-2x"></i></div>
+                            <div>
+                                <p class="text-gray-500">Total Siswa</p>
+                                <p id="total-students" class="text-2xl font-bold">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4">
+                           <div class="bg-green-100 p-4 rounded-full"><i class="fas fa-user-check text-green-500 fa-2x"></i></div>
+                            <div>
+                                <p class="text-gray-500">Hadir</p>
+                                <p id="present-students" class="text-2xl font-bold">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4">
+                            <div class="bg-yellow-100 p-4 rounded-full"><i class="fas fa-user-clock text-yellow-500 fa-2x"></i></div>
+                            <div>
+                                <p class="text-gray-500">Izin/Sakit</p>
+                                <p id="absent-students" class="text-2xl font-bold">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4">
+                           <div class="bg-red-100 p-4 rounded-full"><i class="fas fa-user-times text-red-500 fa-2x"></i></div>
+                            <div>
+                                <p class="text-gray-500">Alpa</p>
+                                <p id="alpha-students" class="text-2xl font-bold">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <div class="flex justify-between items-center mb-4">
+                             <h2 class="text-xl font-bold text-gray-700">Rekap Absensi Hari Ini (<span id="today-date"></span>)</h2>
+                             <div>
+                                <button id="download-excel" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition mr-2"><i class="fas fa-file-excel mr-2"></i>Unduh Excel</button>
+                                <button id="download-pdf" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"><i class="fas fa-file-pdf mr-2"></i>Unduh PDF</button>
+                             </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th class="p-3">NIS</th>
+                                        <th class="p-3">Nama Siswa</th>
+                                        <th class="p-3">Status</th>
+                                        <th class="p-3">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendance-table-body">
+                                    <!-- Data absensi akan diisi oleh JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Students Section -->
+                <section id="students-section" class="page-content hidden">
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <div class="flex justify-between items-center mb-4">
+                             <h2 class="text-xl font-bold text-gray-700">Manajemen Data Siswa</h2>
+                             <button id="add-student-button" class="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition"><i class="fas fa-plus mr-2"></i>Tambah Siswa</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th class="p-3">NIS</th>
+                                        <th class="p-3">Nama Lengkap</th>
+                                        <th class="p-3">QR Code</th>
+                                        <th class="p-3">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="student-list-body">
+                                    <!-- Data siswa akan diisi oleh JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- QR Scanner Section -->
+                <section id="scanner-section" class="page-content hidden">
+                     <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                        <h2 class="text-xl font-bold text-gray-700 mb-4">Pindai QR Code Siswa</h2>
+                        <div id="qr-reader" class="mx-auto mb-4"></div>
+                        <div id="scan-result" class="p-4 bg-gray-100 rounded-lg min-h-[50px] text-lg font-semibold">
+                            Arahkan kamera ke QR Code
+                        </div>
+                     </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settings-section" class="page-content hidden">
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-xl font-bold text-gray-700 mb-6">Pengaturan Aplikasi</h2>
+                        <form id="settings-form" class="space-y-6">
+                            <div>
+                                <label for="school-name" class="block text-sm font-medium text-gray-700">Nama Sekolah</label>
+                                <input type="text" id="school-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                            </div>
+                             <div>
+                                <label for="teacher-name" class="block text-sm font-medium text-gray-700">Nama Guru Kelas</label>
+                                <input type="text" id="teacher-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                            </div>
+                             <div>
+                                <label for="headmaster-name" class="block text-sm font-medium text-gray-700">Nama Kepala Sekolah</label>
+                                <input type="text" id="headmaster-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                            </div>
+                            <div>
+                                <label for="logo-upload" class="block text-sm font-medium text-gray-700">Logo Sekolah</label>
+                                <div class="mt-1 flex items-center space-x-4">
+                                    <img id="logo-preview" src="https://placehold.co/100x100/e2e8f0/4a5568?text=Logo" class="h-16 w-16 rounded-full object-contain bg-gray-100">
+                                    <input type="file" id="logo-upload" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button type="submit" class="bg-teal-500 text-white px-6 py-2 rounded-lg hover:bg-teal-600 transition">Simpan Pengaturan</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </main>
         </div>
     </div>
-    <!-- JavaScript Logic -->
-    <script>
-        // Simpan data di localStorage agar tetap tersimpan
-        const defaultSettings = {
-            schoolName: "SMK Vancoding",
-            teacherName: "Bapak/Ibu Guru",
-            principalName: "Kepala Sekolah",
-            logo: "https://upload.wikimedia.org/wikipedia/commons/6/6b/Logo_SMK.png"
-        };
-        let students = JSON.parse(localStorage.getItem("students")||"[]");
-        let settings = JSON.parse(localStorage.getItem("settings")||"null") || defaultSettings;
 
-        // --- LOGIN ---
-        const loginPage = document.getElementById('login-page');
-        const mainPage = document.getElementById('main-page');
-        const settingsPage = document.getElementById('settings-page');
-        const qrModal = document.getElementById('qr-modal');
-        document.getElementById('login-form').onsubmit = function(e) {
-            e.preventDefault();
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            if (user === 'Van64' && pass === 'Van1909') {
-                loginPage.classList.add('hide');
-                mainPage.classList.remove('hide');
-                loadSettings();
-                renderStudents();
+    <!-- Modals -->
+    <div id="modal-container" class="hidden">
+        <!-- Add/Edit Student Modal -->
+        <div id="student-modal" class="hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content bg-white p-6 rounded-xl shadow-lg w-11/12 md:w-1/3">
+                <h3 id="student-modal-title" class="text-xl font-bold mb-4">Tambah Siswa Baru</h3>
+                <form id="student-form">
+                    <input type="hidden" id="student-id">
+                    <div class="mb-4">
+                        <label for="student-nis" class="block text-sm font-medium text-gray-700">NIS (Nomor Induk Siswa)</label>
+                        <input type="text" id="student-nis" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="student-name" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                        <input type="text" id="student-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancel-student-form" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400">Batal</button>
+                        <button type="submit" class="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- QR Code Modal -->
+        <div id="qr-modal" class="hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content bg-white p-6 rounded-xl shadow-lg w-auto text-center">
+                <h3 id="qr-student-name" class="text-xl font-bold mb-2">Nama Siswa</h3>
+                <p id="qr-student-nis" class="text-gray-500 mb-4">NIS: 12345</p>
+                <div id="qrcode-container" class="flex justify-center p-4 border rounded-lg"></div>
+                <button id="close-qr-modal" class="mt-6 bg-teal-500 text-white px-6 py-2 rounded-lg hover:bg-teal-600">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // DOM Elements
+    const loginPage = document.getElementById('login-page');
+    const appContainer = document.getElementById('app-container');
+    const loginForm = document.getElementById('login-form');
+    const loginError = document.getElementById('login-error');
+    const logoutButton = document.getElementById('logout-button');
+    const navButtons = document.querySelectorAll('.nav-button');
+    const pages = document.querySelectorAll('.page-content');
+    const modalContainer = document.getElementById('modal-container');
+    
+    // Student management elements
+    const addStudentButton = document.getElementById('add-student-button');
+    const studentModal = document.getElementById('student-modal');
+    const studentModalTitle = document.getElementById('student-modal-title');
+    const studentForm = document.getElementById('student-form');
+    const cancelStudentForm = document.getElementById('cancel-student-form');
+    const studentListBody = document.getElementById('student-list-body');
+    const studentIdInput = document.getElementById('student-id');
+    const studentNisInput = document.getElementById('student-nis');
+    const studentNameInput = document.getElementById('student-name');
+
+    // QR Code elements
+    const qrModal = document.getElementById('qr-modal');
+    const closeQrModal = document.getElementById('close-qr-modal');
+    const qrcodeContainer = document.getElementById('qrcode-container');
+    const qrStudentName = document.getElementById('qr-student-name');
+    const qrStudentNis = document.getElementById('qr-student-nis');
+
+    // Settings elements
+    const settingsForm = document.getElementById('settings-form');
+    const schoolNameInput = document.getElementById('school-name');
+    const teacherNameInput = document.getElementById('teacher-name');
+    const headmasterNameInput = document.getElementById('headmaster-name');
+    const logoUploadInput = document.getElementById('logo-upload');
+    const logoPreview = document.getElementById('logo-preview');
+    const schoolNameHeader = document.getElementById('school-name-header');
+    const loginLogo = document.getElementById('login-logo');
+    const sidebarLogo = document.getElementById('sidebar-logo');
+
+    // Dashboard elements
+    const totalStudentsEl = document.getElementById('total-students');
+    const presentStudentsEl = document.getElementById('present-students');
+    const absentStudentsEl = document.getElementById('absent-students');
+    const alphaStudentsEl = document.getElementById('alpha-students');
+    const attendanceTableBody = document.getElementById('attendance-table-body');
+    const todayDateEl = document.getElementById('today-date');
+
+    // Export buttons
+    const downloadExcelBtn = document.getElementById('download-excel');
+    const downloadPdfBtn = document.getElementById('download-pdf');
+
+    let db;
+    let html5QrCode;
+
+    const defaultDb = {
+        settings: {
+            schoolName: 'Nama Sekolah Anda',
+            teacherName: 'Nama Guru',
+            headmasterName: 'Nama Kepala Sekolah',
+            logo: 'https://placehold.co/100x100/e2e8f0/4a5568?text=Logo'
+        },
+        students: [],
+        attendance: {}
+    };
+
+    function getTodayDateString() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // --- Data Management ---
+    function loadState() {
+        const savedState = localStorage.getItem('attendanceApp');
+        db = savedState ? JSON.parse(savedState) : JSON.parse(JSON.stringify(defaultDb));
+        // Ensure today's attendance record exists
+        const today = getTodayDateString();
+        if (!db.attendance[today]) {
+            db.attendance[today] = {};
+        }
+    }
+
+    function saveState() {
+        localStorage.setItem('attendanceApp', JSON.stringify(db));
+    }
+
+    // --- UI Rendering ---
+    function renderAll() {
+        renderSettings();
+        renderStudentList();
+        renderDashboard();
+    }
+
+    function renderSettings() {
+        schoolNameInput.value = db.settings.schoolName;
+        teacherNameInput.value = db.settings.teacherName;
+        headmasterNameInput.value = db.settings.headmasterName;
+        schoolNameHeader.textContent = db.settings.schoolName;
+        logoPreview.src = db.settings.logo;
+        loginLogo.src = db.settings.logo;
+        sidebarLogo.src = db.settings.logo;
+    }
+
+    function renderStudentList() {
+        studentListBody.innerHTML = '';
+        if (db.students.length === 0) {
+            studentListBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">Belum ada data siswa.</td></tr>`;
+            return;
+        }
+        db.students.forEach((student, index) => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-b hover:bg-gray-50';
+            tr.innerHTML = `
+                <td class="p-3">${student.nis}</td>
+                <td class="p-3">${student.name}</td>
+                <td class="p-3">
+                    <button data-nis="${student.nis}" class="view-qr-btn bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-300">Lihat QR</button>
+                </td>
+                <td class="p-3">
+                    <button data-index="${index}" class="edit-student-btn text-blue-500 hover:text-blue-700 mr-3"><i class="fas fa-edit"></i></button>
+                    <button data-index="${index}" class="delete-student-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            studentListBody.appendChild(tr);
+        });
+    }
+    
+    function renderDashboard() {
+        const today = getTodayDateString();
+        todayDateEl.textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        const todayAttendance = db.attendance[today] || {};
+        let present = 0;
+        let absent = 0; // Izin/Sakit
+        
+        db.students.forEach(student => {
+            if (!todayAttendance[student.nis]) {
+                todayAttendance[student.nis] = 'Alpa';
+            }
+        });
+        
+        const attendanceList = Object.values(todayAttendance);
+        present = attendanceList.filter(s => s === 'Hadir').length;
+        absent = attendanceList.filter(s => s === 'Izin' || s === 'Sakit').length;
+        const alpha = db.students.length - present - absent;
+
+        totalStudentsEl.textContent = db.students.length;
+        presentStudentsEl.textContent = present;
+        absentStudentsEl.textContent = absent;
+        alphaStudentsEl.textContent = alpha > 0 ? alpha : 0;
+        
+        renderAttendanceTable();
+    }
+    
+    function renderAttendanceTable() {
+        attendanceTableBody.innerHTML = '';
+        const today = getTodayDateString();
+        const todayAttendance = db.attendance[today] || {};
+
+        if (db.students.length === 0) {
+            attendanceTableBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">Belum ada data siswa untuk diabsen.</td></tr>`;
+            return;
+        }
+
+        db.students.forEach(student => {
+            const status = todayAttendance[student.nis] || 'Alpa';
+            let statusBadge;
+            switch(status) {
+                case 'Hadir': statusBadge = `<span class="px-2 py-1 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full">Hadir</span>`; break;
+                case 'Izin': statusBadge = `<span class="px-2 py-1 text-xs font-semibold leading-5 text-blue-800 bg-blue-100 rounded-full">Izin</span>`; break;
+                case 'Sakit': statusBadge = `<span class="px-2 py-1 text-xs font-semibold leading-5 text-yellow-800 bg-yellow-100 rounded-full">Sakit</span>`; break;
+                default: statusBadge = `<span class="px-2 py-1 text-xs font-semibold leading-5 text-red-800 bg-red-100 rounded-full">Alpa</span>`;
+            }
+            
+            const tr = document.createElement('tr');
+            tr.className = 'border-b hover:bg-gray-50';
+            tr.innerHTML = `
+                <td class="p-3">${student.nis}</td>
+                <td class="p-3">${student.name}</td>
+                <td class="p-3">${statusBadge}</td>
+                <td class="p-3">
+                    <select data-nis="${student.nis}" class="change-status-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5">
+                        <option value="Hadir" ${status === 'Hadir' ? 'selected' : ''}>Hadir</option>
+                        <option value="Izin" ${status === 'Izin' ? 'selected' : ''}>Izin</option>
+                        <option value="Sakit" ${status === 'Sakit' ? 'selected' : ''}>Sakit</option>
+                        <option value="Alpa" ${status === 'Alpa' ? 'selected' : ''}>Alpa</option>
+                    </select>
+                </td>
+            `;
+            attendanceTableBody.appendChild(tr);
+        });
+    }
+
+    // --- Event Handlers ---
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        if (username === 'Van64' && password === 'Van1909') {
+            loginPage.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            loadState();
+            renderAll();
+            switchPage('dashboard');
+        } else {
+            loginError.classList.remove('hidden');
+        }
+    });
+
+    logoutButton.addEventListener('click', () => {
+        if(html5QrCode && html5QrCode.isScanning){
+            html5QrCode.stop();
+        }
+        appContainer.classList.add('hidden');
+        loginPage.classList.remove('hidden');
+        loginError.classList.add('hidden');
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    });
+
+    navButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const pageId = button.dataset.page;
+            switchPage(pageId);
+        });
+    });
+
+    function switchPage(pageId) {
+        // Stop QR scanner if navigating away
+        if(html5QrCode && html5QrCode.isScanning){
+            html5QrCode.stop().catch(err => console.error("Failed to stop QR scanner", err));
+        }
+
+        pages.forEach(page => page.classList.add('hidden'));
+        document.getElementById(`${pageId}-section`).classList.remove('hidden');
+
+        navButtons.forEach(btn => {
+            btn.classList.remove('bg-teal-700');
+            if (btn.dataset.page === pageId) {
+                btn.classList.add('bg-teal-700');
+            }
+        });
+
+        // Start QR scanner if navigating to scanner page
+        if (pageId === 'scanner') {
+            startQrScanner();
+        }
+        
+        // Refresh dashboard data when switching to it
+        if (pageId === 'dashboard') {
+            renderDashboard();
+        }
+    }
+
+    // Student Modal Logic
+    addStudentButton.addEventListener('click', () => {
+        studentForm.reset();
+        studentIdInput.value = '';
+        studentModalTitle.textContent = 'Tambah Siswa Baru';
+        studentNisInput.readOnly = false;
+        modalContainer.classList.remove('hidden');
+        studentModal.classList.remove('hidden');
+    });
+
+    cancelStudentForm.addEventListener('click', () => {
+        modalContainer.classList.add('hidden');
+        studentModal.classList.add('hidden');
+    });
+
+    studentForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const student = {
+            nis: studentNisInput.value.trim(),
+            name: studentNameInput.value.trim()
+        };
+        const id = studentIdInput.value;
+
+        if (id) { // Editing
+            db.students[id] = student;
+        } else { // Adding
+            // Check for duplicate NIS
+            if (db.students.some(s => s.nis === student.nis)) {
+                alert('NIS sudah terdaftar. Silakan gunakan NIS yang lain.');
+                return;
+            }
+            db.students.push(student);
+        }
+        
+        saveState();
+        renderStudentList();
+        renderDashboard();
+        modalContainer.classList.add('hidden');
+        studentModal.classList.add('hidden');
+    });
+
+    studentListBody.addEventListener('click', (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        if (target.classList.contains('edit-student-btn')) {
+            const index = target.dataset.index;
+            const student = db.students[index];
+            studentModalTitle.textContent = 'Edit Data Siswa';
+            studentIdInput.value = index;
+            studentNisInput.value = student.nis;
+            studentNisInput.readOnly = true; // Prevent NIS editing
+            studentNameInput.value = student.name;
+            modalContainer.classList.remove('hidden');
+            studentModal.classList.remove('hidden');
+        }
+
+        if (target.classList.contains('delete-student-btn')) {
+            const index = target.dataset.index;
+            if (confirm(`Apakah Anda yakin ingin menghapus siswa "${db.students[index].name}"?`)) {
+                db.students.splice(index, 1);
+                saveState();
+                renderStudentList();
+                renderDashboard();
+            }
+        }
+        
+        if (target.classList.contains('view-qr-btn')) {
+            const nis = target.dataset.nis;
+            const student = db.students.find(s => s.nis === nis);
+            if (student) {
+                qrStudentName.textContent = student.name;
+                qrStudentNis.textContent = `NIS: ${student.nis}`;
+                qrcodeContainer.innerHTML = '';
+                new QRCode(qrcodeContainer, {
+                    text: student.nis,
+                    width: 200,
+                    height: 200,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+                modalContainer.classList.remove('hidden');
+                qrModal.classList.remove('hidden');
+            }
+        }
+    });
+    
+    closeQrModal.addEventListener('click', () => {
+        modalContainer.classList.add('hidden');
+        qrModal.classList.add('hidden');
+    });
+
+    // Settings Logic
+    settingsForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        db.settings.schoolName = schoolNameInput.value;
+        db.settings.teacherName = teacherNameInput.value;
+        db.settings.headmasterName = headmasterNameInput.value;
+        saveState();
+        renderSettings();
+        alert('Pengaturan berhasil disimpan!');
+    });
+
+    logoUploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                db.settings.logo = event.target.result;
+                saveState();
+                renderSettings();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // QR Scanner Logic
+    function startQrScanner() {
+        const scanResultEl = document.getElementById('scan-result');
+        html5QrCode = new Html5Qrcode("qr-reader");
+        const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+            const nis = decodedText;
+            const student = db.students.find(s => s.nis === nis);
+            if (student) {
+                const today = getTodayDateString();
+                db.attendance[today][nis] = 'Hadir';
+                saveState();
+                scanResultEl.innerHTML = `<span class="text-green-600 font-bold">Berhasil!</span> ${student.name} (${student.nis}) telah diabsen Hadir.`;
+                scanResultEl.classList.remove('bg-red-100', 'text-red-600');
+                scanResultEl.classList.add('bg-green-100', 'text-green-600');
             } else {
-                alert('Username atau password salah!');
+                scanResultEl.textContent = `Error: Siswa dengan NIS ${nis} tidak ditemukan.`;
+                scanResultEl.classList.remove('bg-green-100', 'text-green-600');
+                scanResultEl.classList.add('bg-red-100', 'text-red-600');
+            }
+            // Vibrate for feedback
+            if(navigator.vibrate) {
+                navigator.vibrate(200);
             }
         };
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
+            .catch(err => console.log(`Unable to start scanning, error: ${err}`));
+    }
+    
+    // Attendance status change
+    attendanceTableBody.addEventListener('change', (e) => {
+        if (e.target.classList.contains('change-status-select')) {
+            const nis = e.target.dataset.nis;
+            const newStatus = e.target.value;
+            const today = getTodayDateString();
+            db.attendance[today][nis] = newStatus;
+            saveState();
+            renderDashboard(); // Re-render to update badges and counts
+        }
+    });
 
-        // --- SETTINGS ---
-        function showSettings() {
-            mainPage.classList.add('hide');
-            settingsPage.classList.remove('hide');
-            document.getElementById('input-school-name').value = settings.schoolName;
-            document.getElementById('input-teacher-name').value = settings.teacherName;
-            document.getElementById('input-principal-name').value = settings.principalName;
-        }
-        function loadSettings() {
-            document.getElementById('main-logo').src = settings.logo;
-            document.getElementById('main-school-name').textContent = settings.schoolName;
-            document.getElementById('school-logo').src = settings.logo;
-            document.getElementById('school-name').textContent = settings.schoolName;
-            document.getElementById('teacher-name').textContent = settings.teacherName;
-            document.getElementById('principal-name').textContent = settings.principalName;
-        }
-        document.getElementById('settings-form').onsubmit = function(e) {
-            e.preventDefault();
-            settings.schoolName = document.getElementById('input-school-name').value;
-            settings.teacherName = document.getElementById('input-teacher-name').value;
-            settings.principalName = document.getElementById('input-principal-name').value;
-            localStorage.setItem("settings", JSON.stringify(settings));
-            // Logo upload
-            const fileInput = document.getElementById('logo-input');
-            if (fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    settings.logo = event.target.result;
-                    localStorage.setItem("settings", JSON.stringify(settings));
-                    loadSettings();
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                loadSettings();
+    // Export Logic
+    downloadExcelBtn.addEventListener('click', () => {
+        const today = getTodayDateString();
+        const todayAttendance = db.attendance[today] || {};
+        
+        const data = db.students.map(student => {
+            return {
+                'NIS': student.nis,
+                'Nama Siswa': student.name,
+                'Status': todayAttendance[student.nis] || 'Alpa'
             }
-            settingsPage.classList.add('hide');
-            mainPage.classList.remove('hide');
-        };
+        });
 
-        // --- SISWA ---
-        function renderStudents() {
-            const tbody = document.querySelector('#students-table tbody');
-            tbody.innerHTML = "";
-            students.forEach((s, i) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${i+1}</td>
-                    <td>${s.name}</td>
-                    <td>
-                        <button onclick="showQR('${encodeURIComponent(s.name)}',${i+1})">QR</button>
-                    </td>
-                    <td>
-                        <input type="checkbox" ${s.absen?'checked':''} onchange="toggleAbsen(${i})">
-                    </td>
-                    <td>
-                        <button onclick="delStudent(${i})" style="background:#ff6e6e;">Hapus</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-            localStorage.setItem("students", JSON.stringify(students));
-        }
-        window.toggleAbsen = function(idx) {
-            students[idx].absen = !students[idx].absen;
-            renderStudents();
-        }
-        window.delStudent = function(idx) {
-            if(confirm("Hapus siswa ini?")) {
-                students.splice(idx,1);
-                renderStudents();
-            }
-        }
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Absensi");
+        
+        // Add header info
+        XLSX.utils.sheet_add_aoa(worksheet, [
+            [`Laporan Absensi - ${db.settings.schoolName}`],
+            [`Tanggal: ${todayDateEl.textContent}`],
+            [] // Empty row
+        ], { origin: "A1" });
 
-        document.getElementById('add-student-form').onsubmit = function(e) {
-            e.preventDefault();
-            const name = document.getElementById('student-name').value.trim();
-            if (name.length < 2) return alert("Nama siswa minimal 2 karakter");
-            students.push({name, absen: false});
-            renderStudents();
-            document.getElementById('student-name').value="";
-        };
-        window.addDummyStudents = function() {
-            const names = ["Adit", "Budi", "Cici", "Dedi", "Eka", "Fira", "Gilang", "Hana", "Indra", "Joko"];
-            for(let i=0;i<10;i++) {
-                students.push({name: names[i]+" "+(Math.floor(Math.random()*99)+1), absen: false});
-            }
-            renderStudents();
-        }
+        XLSX.writeFile(workbook, `Absensi_${db.settings.schoolName}_${today}.xlsx`);
+    });
 
-        // --- QR ---
-        window.showQR = function(nameEnc, no) {
-            const name = decodeURIComponent(nameEnc);
-            document.getElementById('qr-modal').classList.remove('hide');
-            document.getElementById('qr-student-name').textContent = `#${no} - ${name}`;
-            document.getElementById('qr-code').innerHTML = "";
-            // QR code data = Nama + Nomor urut
-            new QRCode(document.getElementById('qr-code'), {
-                text: JSON.stringify({no, name}),
-                width: 160, height: 160, colorDark: "#16a085", colorLight: "#fff"
-            });
-        }
-        window.closeQR = function() {
-            document.getElementById('qr-modal').classList.add('hide');
-        }
+    downloadPdfBtn.addEventListener('click', () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const today = getTodayDateString();
+        const todayAttendance = db.attendance[today] || {};
 
-        // --- DOWNLOAD EXCEL ---
-        window.downloadExcel = function() {
-            const rows = [["No", "Nama", "Absen"]];
-            students.forEach((s,i)=>rows.push([i+1, s.name, s.absen?"Hadir":"Tidak Hadir"]));
-            const ws = XLSX.utils.aoa_to_sheet(rows);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Absensi");
-            XLSX.writeFile(wb, "absensi.xlsx");
-        }
-        // --- DOWNLOAD PDF (simple) ---
-        window.downloadPDF = function() {
-            // Pakai window.print() untuk PDF sederhana (tanpa QR)
-            let w = window.open("", "_blank");
-            w.document.write(`<html><head><title>Absensi</title></head><body>`);
-            w.document.write(`<h2>Daftar Absensi - ${settings.schoolName}</h2>`);
-            w.document.write(`<p>Guru: ${settings.teacherName} | Kepala Sekolah: ${settings.principalName}</p>`);
-            w.document.write(`<table border="1" style="border-collapse:collapse;width:100%"><tr><th>No</th><th>Nama</th><th>Absen</th></tr>`);
-            students.forEach((s,i)=>{
-                w.document.write(`<tr><td>${i+1}</td><td>${s.name}</td><td>${s.absen?"Hadir":"Tidak Hadir"}</td></tr>`);
-            });
-            w.document.write(`</table></body></html>`);
-            w.document.close();
-            w.print();
-        }
+        const head = [['NIS', 'Nama Siswa', 'Status']];
+        const body = db.students.map(student => [
+            student.nis,
+            student.name,
+            todayAttendance[student.nis] || 'Alpa'
+        ]);
+        
+        doc.setFontSize(18);
+        doc.text(`Laporan Absensi - ${db.settings.schoolName}`, 14, 20);
+        doc.setFontSize(12);
+        doc.text(`Tanggal: ${todayDateEl.textContent}`, 14, 28);
+        doc.text(`Guru: ${db.settings.teacherName}`, 14, 34);
+        
+        doc.autoTable({
+            startY: 40,
+            head: head,
+            body: body,
+            theme: 'grid',
+            headStyles: { fillColor: [22, 160, 133] } // Teal color
+        });
 
-        // --- INIT ---
-        loadSettings();
-        if(students.length>0) renderStudents();
-    </script>
+        doc.save(`Absensi_${db.settings.schoolName}_${today}.pdf`);
+    });
+
+    // Initial Load
+    // Check if user is already "logged in" (for page refresh)
+    // For this simple app, we force login every time.
+    // A more complex app might use sessionStorage to keep the user logged in.
+});
+</script>
+
 </body>
 </html>
