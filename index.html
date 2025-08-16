@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Van Absen Siswa</title>
+    <title>VAN ABSEN SISWA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -221,8 +221,8 @@
                         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                     </svg>
                 </div>
-                <h1 id="schoolName" class="text-3xl font-bold text-white mb-2">EduAttend Pro</h1>
-                <p class="text-white text-opacity-80 text-lg">Sistem Absensi QR Modern</p>
+                <h1 id="schoolName" class="text-3xl font-bold text-white mb-2">VAN PRO</h1>
+                <p class="text-white text-opacity-80 text-lg">VAN ABSENSI SISWA</p>
             </div>
             
             <form id="loginForm" class="space-y-6">
@@ -252,7 +252,7 @@
             <div id="loginError" class="mt-6 text-red-200 text-sm text-center hidden bg-red-500 bg-opacity-20 p-3 rounded-xl"></div>
             
             <div class="mt-8 text-center">
-                <p class="text-white text-opacity-60 text-sm">Dibuat oleh ivan arifestian</p>
+                <p class="text-white text-opacity-60 text-sm">Di buat oleh : ivan arifestian</p>
             </div>
         </div>
     </div>
@@ -268,8 +268,8 @@
                             <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
                         </svg>
                     </div>
-                    <div>o
-                        <h2 class="font-bold text-lg">Van Pro</h2>
+                    <div>
+                        <h2 class="font-bold text-lg">EduAttend Pro</h2>
                         <p class="text-xs text-gray-300">v2.1 QR Enhanced</p>
                     </div>
                 </div>
@@ -330,7 +330,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-                        <p class="text-gray-600">Selamat Datang di Sistem Van Absen</p>
+                        <p class="text-gray-600">Selamat datang di sistem absensi QR modern</p>
                     </div>
                     
                     <div class="flex items-center space-x-4">
@@ -958,6 +958,12 @@
                 return;
             }
             
+            // Validasi input untuk class
+            if (type === 'class' && !selectedClass) {
+                showNotification('Kelas harus dipilih!', 'error');
+                return;
+            }
+            
             const qrId = 'QR_' + Date.now();
             const now = new Date();
             const expiry = new Date(now.getTime() + (24 * 60 * 60 * 1000)); // 24 hours
@@ -980,11 +986,17 @@
             
             // Generate QR code
             const qrContainer = document.getElementById('qrDisplayArea');
-            qrContainer.innerHTML = '<div class="flex items-center justify-center p-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>';
+            qrContainer.innerHTML = '<div class="flex items-center justify-center p-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div><span class="ml-3 text-blue-600">Membuat QR Code...</span></div>';
+            
+            // Disable button during generation
+            const generateBtn = document.getElementById('generateQRBtn');
+            generateBtn.disabled = true;
+            generateBtn.textContent = '⏳ Membuat...';
             
             try {
-                // Create canvas element
+                // Create canvas element with unique ID
                 const canvas = document.createElement('canvas');
+                canvas.id = 'qrCanvas_' + Date.now();
                 
                 QRCode.toCanvas(canvas, JSON.stringify(qrData), {
                     width: 300,
@@ -996,6 +1008,10 @@
                     },
                     errorCorrectionLevel: 'M'
                 }, function(error) {
+                    // Re-enable button
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = '🎯 Generate QR Code';
+                    
                     if (error) {
                         console.error('QR Generation Error:', error);
                         qrContainer.innerHTML = `
@@ -1005,6 +1021,9 @@
                                 </svg>
                                 <p class="text-lg font-medium">Gagal membuat QR Code</p>
                                 <p class="text-sm mt-2">Silakan coba lagi</p>
+                                <button onclick="generateAdvancedQRCode()" class="mt-3 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200">
+                                    🔄 Coba Lagi
+                                </button>
                             </div>
                         `;
                         showNotification('Gagal membuat QR Code!', 'error');
@@ -1028,13 +1047,21 @@
                 });
             } catch (error) {
                 console.error('QR Code Generation Error:', error);
+                
+                // Re-enable button
+                generateBtn.disabled = false;
+                generateBtn.textContent = '🎯 Generate QR Code';
+                
                 qrContainer.innerHTML = `
                     <div class="text-center text-red-500">
                         <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <p class="text-lg font-medium">Gagal membuat QR Code</p>
-                        <p class="text-sm mt-2">Silakan coba lagi</p>
+                        <p class="text-sm mt-2">Terjadi kesalahan sistem</p>
+                        <button onclick="generateAdvancedQRCode()" class="mt-3 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200">
+                            🔄 Coba Lagi
+                        </button>
                     </div>
                 `;
                 showNotification('Terjadi kesalahan saat membuat QR Code!', 'error');
@@ -1065,26 +1092,32 @@
             }
             
             try {
-                // Create download link
-                const link = document.createElement('a');
+                // Disable download button temporarily
+                const downloadBtn = document.getElementById('downloadQRBtn');
+                downloadBtn.disabled = true;
+                downloadBtn.textContent = '⏳ Mengunduh...';
                 
                 // Generate filename based on QR type
                 let filename = `QR_${currentQRCode.type}_${currentQRCode.date}`;
                 if (currentQRCode.class) {
-                    filename += `_${currentQRCode.class}`;
+                    filename += `_${currentQRCode.class.replace(/[^a-zA-Z0-9]/g, '_')}`;
                 }
                 if (currentQRCode.event) {
                     filename += `_${currentQRCode.event.replace(/[^a-zA-Z0-9]/g, '_')}`;
                 }
                 filename += '.png';
                 
-                link.download = filename;
-                
                 // Convert canvas to blob for better browser compatibility
                 canvas.toBlob(function(blob) {
+                    // Re-enable button
+                    downloadBtn.disabled = false;
+                    downloadBtn.textContent = '📥 Download';
+                    
                     if (blob) {
                         const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
                         link.href = url;
+                        link.download = filename;
                         
                         // Trigger download
                         document.body.appendChild(link);
@@ -1094,20 +1127,34 @@
                         // Clean up
                         setTimeout(() => URL.revokeObjectURL(url), 100);
                         
-                        showNotification('QR Code berhasil diunduh!', 'success');
+                        showNotification(`QR Code berhasil diunduh: ${filename}`, 'success');
                     } else {
                         // Fallback to dataURL method
-                        link.href = canvas.toDataURL('image/png');
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        
-                        showNotification('QR Code berhasil diunduh!', 'success');
+                        try {
+                            const link = document.createElement('a');
+                            link.href = canvas.toDataURL('image/png', 0.9);
+                            link.download = filename;
+                            
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            
+                            showNotification(`QR Code berhasil diunduh: ${filename}`, 'success');
+                        } catch (fallbackError) {
+                            console.error('Fallback Download Error:', fallbackError);
+                            showNotification('Gagal mengunduh QR Code! Browser tidak mendukung.', 'error');
+                        }
                     }
                 }, 'image/png', 0.9);
                 
             } catch (error) {
                 console.error('Download Error:', error);
+                
+                // Re-enable button
+                const downloadBtn = document.getElementById('downloadQRBtn');
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = '📥 Download';
+                
                 showNotification('Gagal mengunduh QR Code!', 'error');
             }
         }
@@ -1484,56 +1531,77 @@
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Update settings
             settings.schoolName = document.getElementById('schoolNameSetting').value;
             settings.teacherName = document.getElementById('teacherName').value;
             settings.principalName = document.getElementById('principalName').value;
             
             const logoFile = document.getElementById('logoUpload').files[0];
+            
             if (logoFile) {
+                // Jika ada file logo baru
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     settings.logo = e.target.result;
                     localStorage.setItem('settings', JSON.stringify(settings));
                     loadSettings();
-                    showNotification('Logo berhasil diubah!', 'success');
+                    
+                    document.getElementById('settingsModal').classList.add('hidden');
+                    showNotification('Pengaturan dan logo berhasil disimpan!', 'success');
                 };
                 reader.readAsDataURL(logoFile);
             } else {
+                // Jika tidak ada file logo baru, simpan pengaturan lainnya
                 localStorage.setItem('settings', JSON.stringify(settings));
                 loadSettings();
+                
+                document.getElementById('settingsModal').classList.add('hidden');
+                showNotification('Pengaturan berhasil disimpan!', 'success');
             }
-            
-            document.getElementById('settingsModal').classList.add('hidden');
-            showNotification('Pengaturan berhasil disimpan!', 'success');
         });
 
         function loadSettings() {
+            // Update nama sekolah di berbagai tempat
             document.getElementById('schoolName').textContent = settings.schoolName;
             
             // Update logo di login page
-            if (settings.logo) {
-                document.getElementById('schoolLogo').innerHTML = `<img src="${settings.logo}" alt="Logo Sekolah" class="w-full h-full object-cover rounded-2xl">`;
-            } else {
-                // Default logo jika belum ada upload
-                document.getElementById('schoolLogo').innerHTML = `
-                    <svg class="w-14 h-14 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                    </svg>
-                `;
+            const loginLogo = document.getElementById('schoolLogo');
+            if (loginLogo) {
+                if (settings.logo) {
+                    loginLogo.innerHTML = `<img src="${settings.logo}" alt="Logo Sekolah" class="w-full h-full object-cover rounded-2xl">`;
+                    loginLogo.classList.remove('bg-white', 'bg-opacity-20');
+                } else {
+                    // Default logo jika belum ada upload
+                    loginLogo.innerHTML = `
+                        <svg class="w-14 h-14 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    `;
+                    loginLogo.classList.add('bg-white', 'bg-opacity-20');
+                }
             }
             
-            // Update logo di sidebar dashboard
-            const sidebarLogo = document.querySelector('.sidebar-gradient .w-10.h-10');
-            if (sidebarLogo && settings.logo) {
-                sidebarLogo.innerHTML = `<img src="${settings.logo}" alt="Logo" class="w-full h-full object-cover rounded-xl">`;
-                sidebarLogo.classList.remove('bg-gradient-to-r', 'from-blue-400', 'to-purple-500');
-            } else if (sidebarLogo) {
-                sidebarLogo.innerHTML = `
-                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
-                    </svg>
-                `;
-                sidebarLogo.classList.add('bg-gradient-to-r', 'from-blue-400', 'to-purple-500');
+            // Update logo di sidebar dashboard dengan selector yang lebih spesifik
+            const sidebarLogoContainer = document.querySelector('#sidebar .w-10.h-10');
+            if (sidebarLogoContainer) {
+                if (settings.logo) {
+                    sidebarLogoContainer.innerHTML = `<img src="${settings.logo}" alt="Logo Sekolah" class="w-full h-full object-cover rounded-xl">`;
+                    sidebarLogoContainer.className = 'w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden';
+                } else {
+                    // Default logo jika belum ada upload
+                    sidebarLogoContainer.innerHTML = `
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
+                        </svg>
+                    `;
+                    sidebarLogoContainer.className = 'w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl flex items-center justify-center';
+                }
+            }
+            
+            // Update nama sekolah di sidebar jika ada
+            const sidebarSchoolName = document.querySelector('#sidebar h2');
+            if (sidebarSchoolName) {
+                sidebarSchoolName.textContent = settings.schoolName;
             }
         }
 
@@ -1561,12 +1629,14 @@
         
         // Remove logo function
         function removeLogo() {
-            settings.logo = null;
-            localStorage.setItem('settings', JSON.stringify(settings));
-            loadSettings();
-            loadSettingsForm();
-            document.getElementById('logoUpload').value = '';
-            showNotification('Logo berhasil dihapus!', 'success');
+            if (confirm('Yakin ingin menghapus logo sekolah?')) {
+                settings.logo = null;
+                localStorage.setItem('settings', JSON.stringify(settings));
+                loadSettings();
+                loadSettingsForm();
+                document.getElementById('logoUpload').value = '';
+                showNotification('Logo berhasil dihapus!', 'success');
+            }
         }
 
         // Update statistics
@@ -1695,140 +1765,282 @@
                 return;
             }
             
+            // Close existing modal if any
+            const existingModal = document.getElementById('studentQRModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
             const qrData = {
                 type: 'student_id',
                 nis: student.nis,
                 name: student.name,
                 class: student.class,
                 school: settings.schoolName,
-                generated: new Date().toISOString()
+                generated: new Date().toISOString(),
+                version: '2.1'
             };
             
-            // Create modal for student QR
+            // Create modal for student QR with unique ID
+            const modalId = 'studentQRModal_' + Date.now();
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50';
+            modal.id = modalId;
             modal.innerHTML = `
                 <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-bounce-in">
                     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                         <h3 class="text-xl font-semibold text-gray-800">QR Code - ${student.name}</h3>
-                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                        <button onclick="closeStudentQRModal('${modalId}')" class="text-gray-400 hover:text-gray-600 transition duration-200">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
                     </div>
                     <div class="p-6 text-center">
-                        <div id="studentQRContainer" class="mb-4 flex items-center justify-center">
-                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        <div id="studentQRContainer_${modalId}" class="mb-4 flex items-center justify-center min-h-[200px]">
+                            <div class="flex items-center space-x-3">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                                <span class="text-blue-600">Membuat QR Code...</span>
+                            </div>
                         </div>
-                        <p class="text-gray-600 text-sm mb-4">QR Code untuk ${student.name} (${student.nis})</p>
-                        <button onclick="downloadStudentQR('${student.nis}')" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-blue-600 hover:to-blue-700 transition duration-200" id="downloadStudentBtn" disabled>
-                            📥 Download QR
-                        </button>
+                        <div class="mb-4">
+                            <p class="text-gray-800 font-medium">${student.name}</p>
+                            <p class="text-gray-600 text-sm">NIS: ${student.nis} | Kelas: ${student.class}</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button onclick="downloadStudentQR('${student.nis}', '${modalId}')" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-blue-600 hover:to-blue-700 transition duration-200 disabled:opacity-50" id="downloadStudentBtn_${modalId}" disabled>
+                                📥 Download QR
+                            </button>
+                            <button onclick="retryStudentQR('${student.nis}', '${modalId}')" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-4 py-2 rounded-xl hover:from-gray-600 hover:to-gray-700 transition duration-200 hidden" id="retryStudentBtn_${modalId}">
+                                🔄 Retry
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
             
             document.body.appendChild(modal);
             
-            // Generate QR code
+            // Generate QR code with better error handling
+            generateStudentQRCode(student, qrData, modalId);
+        }
+        
+        // Generate student QR code with improved error handling
+        function generateStudentQRCode(student, qrData, modalId) {
             try {
                 const canvas = document.createElement('canvas');
-                const container = modal.querySelector('#studentQRContainer');
+                canvas.id = `studentQRCanvas_${modalId}`;
+                const container = document.getElementById(`studentQRContainer_${modalId}`);
+                
+                if (!container) {
+                    console.error('QR Container not found');
+                    return;
+                }
+                
+                // Validate QR data
+                if (!qrData || !qrData.nis || !qrData.name) {
+                    throw new Error('Invalid QR data');
+                }
                 
                 QRCode.toCanvas(canvas, JSON.stringify(qrData), {
-                    width: 200,
-                    height: 200,
-                    margin: 2,
+                    width: 250,
+                    height: 250,
+                    margin: 3,
                     color: {
                         dark: '#1f2937',
                         light: '#ffffff'
                     },
-                    errorCorrectionLevel: 'M'
+                    errorCorrectionLevel: 'H'
                 }, function(error) {
+                    const downloadBtn = document.getElementById(`downloadStudentBtn_${modalId}`);
+                    const retryBtn = document.getElementById(`retryStudentBtn_${modalId}`);
+                    
                     if (error) {
-                        console.error('Student QR Error:', error);
+                        console.error('Student QR Generation Error:', error);
                         container.innerHTML = `
                             <div class="text-center text-red-500">
-                                <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <p class="text-sm">Gagal membuat QR Code</p>
+                                <p class="text-sm font-medium mb-2">Gagal membuat QR Code</p>
+                                <p class="text-xs text-gray-500">Silakan coba lagi</p>
                             </div>
                         `;
-                        showNotification('Gagal membuat QR Code siswa!', 'error');
+                        
+                        if (downloadBtn) downloadBtn.disabled = true;
+                        if (retryBtn) retryBtn.classList.remove('hidden');
+                        
+                        showNotification('Gagal membuat QR Code siswa! Silakan coba lagi.', 'error');
                     } else {
+                        // Success - clear container and add canvas
                         container.innerHTML = '';
                         container.appendChild(canvas);
-                        modal.querySelector('#downloadStudentBtn').disabled = false;
+                        
+                        // Enable download button
+                        if (downloadBtn) {
+                            downloadBtn.disabled = false;
+                            downloadBtn.classList.remove('opacity-50');
+                        }
+                        
+                        // Hide retry button
+                        if (retryBtn) retryBtn.classList.add('hidden');
+                        
+                        showNotification('QR Code siswa berhasil dibuat!', 'success');
                     }
                 });
             } catch (error) {
-                console.error('Student QR Generation Error:', error);
-                modal.querySelector('#studentQRContainer').innerHTML = `
-                    <div class="text-center text-red-500">
-                        <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <p class="text-sm">Gagal membuat QR Code</p>
-                    </div>
-                `;
+                console.error('Student QR Generation Exception:', error);
+                const container = document.getElementById(`studentQRContainer_${modalId}`);
+                const downloadBtn = document.getElementById(`downloadStudentBtn_${modalId}`);
+                const retryBtn = document.getElementById(`retryStudentBtn_${modalId}`);
+                
+                if (container) {
+                    container.innerHTML = `
+                        <div class="text-center text-red-500">
+                            <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p class="text-sm font-medium mb-2">Terjadi kesalahan sistem</p>
+                            <p class="text-xs text-gray-500">Silakan coba lagi atau refresh halaman</p>
+                        </div>
+                    `;
+                }
+                
+                if (downloadBtn) downloadBtn.disabled = true;
+                if (retryBtn) retryBtn.classList.remove('hidden');
+                
                 showNotification('Terjadi kesalahan saat membuat QR Code siswa!', 'error');
             }
         }
-
-        // Download student QR
-        function downloadStudentQR(nis) {
+        
+        // Retry student QR generation
+        function retryStudentQR(nis, modalId) {
             const student = students.find(s => s.nis === nis);
             if (!student) {
                 showNotification('Siswa tidak ditemukan!', 'error');
                 return;
             }
             
-            const canvas = document.querySelector('#studentQRContainer canvas');
+            const qrData = {
+                type: 'student_id',
+                nis: student.nis,
+                name: student.name,
+                class: student.class,
+                school: settings.schoolName,
+                generated: new Date().toISOString(),
+                version: '2.1'
+            };
+            
+            // Reset container to loading state
+            const container = document.getElementById(`studentQRContainer_${modalId}`);
+            if (container) {
+                container.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        <span class="text-blue-600">Membuat ulang QR Code...</span>
+                    </div>
+                `;
+            }
+            
+            // Hide retry button
+            const retryBtn = document.getElementById(`retryStudentBtn_${modalId}`);
+            if (retryBtn) retryBtn.classList.add('hidden');
+            
+            // Retry generation
+            setTimeout(() => {
+                generateStudentQRCode(student, qrData, modalId);
+            }, 500);
+        }
+        
+        // Close student QR modal
+        function closeStudentQRModal(modalId) {
+            const modal = document.getElementById(modalId || 'studentQRModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Download student QR
+        function downloadStudentQR(nis, modalId) {
+            const student = students.find(s => s.nis === nis);
+            if (!student) {
+                showNotification('Siswa tidak ditemukan!', 'error');
+                return;
+            }
+            
+            // Find canvas with specific modal ID
+            const canvas = document.querySelector(`#studentQRContainer_${modalId} canvas`);
             if (!canvas) {
                 showNotification('QR Code tidak ditemukan! Silakan generate ulang.', 'error');
                 return;
             }
             
             try {
-                // Create download link
-                const link = document.createElement('a');
+                // Disable download button temporarily
+                const downloadBtn = document.getElementById(`downloadStudentBtn_${modalId}`);
+                if (downloadBtn) {
+                    downloadBtn.disabled = true;
+                    downloadBtn.textContent = '⏳ Mengunduh...';
+                }
                 
-                // Clean filename
-                const cleanName = student.name.replace(/[^a-zA-Z0-9]/g, '_');
-                const filename = `QR_Student_${cleanName}_${student.nis}.png`;
-                
-                link.download = filename;
+                // Clean filename - remove special characters and ensure safe naming
+                const cleanName = student.name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_').substring(0, 20);
+                const cleanNIS = student.nis.replace(/[^a-zA-Z0-9]/g, '');
+                const timestamp = new Date().toISOString().split('T')[0];
+                const filename = `QR_Student_${cleanName}_${cleanNIS}_${timestamp}.png`;
                 
                 // Convert canvas to blob for better browser compatibility
                 canvas.toBlob(function(blob) {
+                    // Re-enable button
+                    if (downloadBtn) {
+                        downloadBtn.disabled = false;
+                        downloadBtn.textContent = '📥 Download QR';
+                    }
+                    
                     if (blob) {
                         const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
                         link.href = url;
+                        link.download = filename;
                         
                         // Trigger download
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
                         
-                        // Clean up
+                        // Clean up URL object
                         setTimeout(() => URL.revokeObjectURL(url), 100);
                         
-                        showNotification('QR Code siswa berhasil diunduh!', 'success');
+                        showNotification(`QR Code ${student.name} berhasil diunduh!`, 'success');
                     } else {
                         // Fallback to dataURL method
-                        link.href = canvas.toDataURL('image/png');
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        
-                        showNotification('QR Code siswa berhasil diunduh!', 'success');
+                        try {
+                            const link = document.createElement('a');
+                            link.href = canvas.toDataURL('image/png', 0.9);
+                            link.download = filename;
+                            
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            
+                            showNotification(`QR Code ${student.name} berhasil diunduh!`, 'success');
+                        } catch (fallbackError) {
+                            console.error('Fallback Download Error:', fallbackError);
+                            showNotification('Gagal mengunduh QR Code! Browser tidak mendukung.', 'error');
+                        }
                     }
                 }, 'image/png', 0.9);
                 
             } catch (error) {
                 console.error('Student QR Download Error:', error);
+                
+                // Re-enable button
+                const downloadBtn = document.getElementById(`downloadStudentBtn_${modalId}`);
+                if (downloadBtn) {
+                    downloadBtn.disabled = false;
+                    downloadBtn.textContent = '📥 Download QR';
+                }
+                
                 showNotification('Gagal mengunduh QR Code siswa!', 'error');
             }
         }
@@ -2242,5 +2454,5 @@
             localStorage.setItem('students', JSON.stringify(students));
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97026a3fc739fdc7',t:'MTc1NTM2Mjg2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97028c97617481b4',t:'MTc1NTM2NDI2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
