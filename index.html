@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VAN ABSEN - Sistem Absensi Modern</title>
+    <title>EduAttend Pro - Sistem Absensi QR Modern</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -46,6 +46,10 @@
             animation: bounceIn 0.8s ease-out;
         }
         
+        .animate-pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -63,6 +67,12 @@
             100% { transform: scale(1); opacity: 1; }
         }
         
+        @keyframes pulse-ring {
+            0% { transform: scale(0.33); }
+            40%, 50% { opacity: 1; }
+            100% { opacity: 0; transform: scale(1.33); }
+        }
+        
         .floating {
             animation: floating 3s ease-in-out infinite;
         }
@@ -72,15 +82,6 @@
             50% { transform: translateY(-10px); }
         }
         
-        .pulse-ring {
-            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-        }
-        
-        @keyframes pulse-ring {
-            0% { transform: scale(0.33); }
-            80%, 100% { opacity: 0; }
-        }
-        
         .dark-mode {
             background: #0f172a;
             color: #f1f5f9;
@@ -88,6 +89,121 @@
         
         .sidebar-gradient {
             background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+        }
+        
+        .qr-scanner-container {
+            position: relative;
+            border-radius: 1rem;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        .qr-scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .qr-scanner-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 3px solid #10b981;
+            border-radius: 1rem;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        }
+        
+        .qr-scanner-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #10b981;
+        }
+        
+        .qr-scanner-corner.top-left {
+            top: -3px;
+            left: -3px;
+            border-right: none;
+            border-bottom: none;
+        }
+        
+        .qr-scanner-corner.top-right {
+            top: -3px;
+            right: -3px;
+            border-left: none;
+            border-bottom: none;
+        }
+        
+        .qr-scanner-corner.bottom-left {
+            bottom: -3px;
+            left: -3px;
+            border-right: none;
+            border-top: none;
+        }
+        
+        .qr-scanner-corner.bottom-right {
+            bottom: -3px;
+            right: -3px;
+            border-left: none;
+            border-top: none;
+        }
+        
+        .qr-code-display {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px dashed #0ea5e9;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .qr-code-display::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(14, 165, 233, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        .success-animation {
+            animation: successPulse 0.6s ease-out;
+        }
+        
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background-color: #10b981; }
+            100% { transform: scale(1); }
+        }
+        
+        .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #10b981, transparent);
+            animation: scanLine 2s linear infinite;
+        }
+        
+        @keyframes scanLine {
+            0% { top: 0; }
+            100% { top: 100%; }
         }
     </style>
 </head>
@@ -101,12 +217,12 @@
         <div class="glass-effect rounded-3xl shadow-2xl p-8 w-full max-w-md animate-bounce-in relative z-10">
             <div class="text-center mb-8">
                 <div id="schoolLogo" class="w-24 h-24 mx-auto mb-6 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                    <svg class="w-14 h-14 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                    <svg class="w-14 h-14 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                     </svg>
                 </div>
-                <h1 id="schoolName" class="text-3xl font-bold text-white mb-2">van absen</h1>
-                <p class="text-white text-opacity-80 text-lg">Sistem Absensi Modern</p>
+                <h1 id="schoolName" class="text-3xl font-bold text-white mb-2">EduAttend Pro</h1>
+                <p class="text-white text-opacity-80 text-lg">Sistem Absensi QR Modern</p>
             </div>
             
             <form id="loginForm" class="space-y-6">
@@ -136,7 +252,7 @@
             <div id="loginError" class="mt-6 text-red-200 text-sm text-center hidden bg-red-500 bg-opacity-20 p-3 rounded-xl"></div>
             
             <div class="mt-8 text-center">
-                <p class="text-white text-opacity-60 text-sm">Dibuat oleh: ivan arifestian</p>
+                <p class="text-white text-opacity-60 text-sm">Demo: Van64 / Van1909</p>
             </div>
         </div>
     </div>
@@ -153,8 +269,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h2 class="font-bold text-lg">van absen</h2>
-                        <p class="text-xs text-gray-300">v1.0 Modern</p>
+                        <h2 class="font-bold text-lg">EduAttend Pro</h2>
+                        <p class="text-xs text-gray-300">v2.1 QR Enhanced</p>
                     </div>
                 </div>
                 
@@ -173,11 +289,18 @@
                         <span>Kelola Siswa</span>
                     </a>
                     
+                    <a href="#" onclick="showSection('qr-section')" class="nav-item flex items-center space-x-3 p-3 rounded-xl hover:bg-white hover:bg-opacity-10 transition duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                        </svg>
+                        <span>QR Absensi</span>
+                    </a>
+                    
                     <a href="#" onclick="showSection('attendance-section')" class="nav-item flex items-center space-x-3 p-3 rounded-xl hover:bg-white hover:bg-opacity-10 transition duration-200">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>Absensi</span>
+                        <span>Data Absensi</span>
                     </a>
                     
                     <a href="#" onclick="showSection('reports-section')" class="nav-item flex items-center space-x-3 p-3 rounded-xl hover:bg-white hover:bg-opacity-10 transition duration-200">
@@ -207,10 +330,15 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-                        <p class="text-gray-600">Selamat datang di Van Absen</p>
+                        <p class="text-gray-600">Selamat datang di sistem absensi QR modern</p>
                     </div>
                     
                     <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span>QR System Active</span>
+                        </div>
+                        
                         <button id="darkModeToggle" class="p-2 rounded-xl hover:bg-gray-100 transition duration-200">
                             <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
@@ -281,13 +409,13 @@
                     <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white card-hover animate-slide-up" style="animation-delay: 0.3s;">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-purple-100 text-sm font-medium">Tingkat Kehadiran</p>
-                                <p id="attendanceRate" class="text-3xl font-bold mt-2">0%</p>
-                                <p class="text-purple-100 text-xs mt-1">Persentase</p>
+                                <p class="text-purple-100 text-sm font-medium">QR Scans Hari Ini</p>
+                                <p id="qrScansToday" class="text-3xl font-bold mt-2">0</p>
+                                <p class="text-purple-100 text-xs mt-1">Scan berhasil</p>
                             </div>
                             <div class="bg-white bg-opacity-20 p-3 rounded-2xl">
                                 <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/>
+                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
                                 </svg>
                             </div>
                         </div>
@@ -295,7 +423,7 @@
                 </div>
 
                 <!-- Quick Actions -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 card-hover animate-slide-up" style="animation-delay: 0.4s;">
                         <div class="text-center">
                             <div class="bg-gradient-to-r from-teal-400 to-teal-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -304,7 +432,7 @@
                                 </svg>
                             </div>
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">Tambah Siswa</h3>
-                            <p class="text-gray-600 text-sm mb-4">Daftarkan siswa baru ke dalam sistem</p>
+                            <p class="text-gray-600 text-sm mb-4">Daftarkan siswa baru</p>
                             <button id="addStudentBtn" class="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-6 py-2 rounded-xl hover:from-teal-600 hover:to-teal-700 transition duration-200 w-full">
                                 Tambah Siswa
                             </button>
@@ -319,9 +447,9 @@
                                 </svg>
                             </div>
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">Generate QR</h3>
-                            <p class="text-gray-600 text-sm mb-4">Buat QR code untuk absensi otomatis</p>
-                            <button id="generateQRBtn" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-blue-600 hover:to-blue-700 transition duration-200 w-full">
-                                Generate QR
+                            <p class="text-gray-600 text-sm mb-4">Buat QR code otomatis</p>
+                            <button onclick="showSection('qr-section')" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-blue-600 hover:to-blue-700 transition duration-200 w-full">
+                                Buka QR Center
                             </button>
                         </div>
                     </div>
@@ -334,9 +462,24 @@
                                 </svg>
                             </div>
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">Scan QR</h3>
-                            <p class="text-gray-600 text-sm mb-4">Scan QR code untuk mencatat kehadiran</p>
-                            <button id="scanQRBtn" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-xl hover:from-green-600 hover:to-green-700 transition duration-200 w-full">
-                                Scan QR
+                            <p class="text-gray-600 text-sm mb-4">Scan untuk absensi</p>
+                            <button onclick="showSection('qr-section')" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-xl hover:from-green-600 hover:to-green-700 transition duration-200 w-full">
+                                Mulai Scan
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 card-hover animate-slide-up" style="animation-delay: 0.7s;">
+                        <div class="text-center">
+                            <div class="bg-gradient-to-r from-orange-400 to-orange-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Laporan</h3>
+                            <p class="text-gray-600 text-sm mb-4">Export data absensi</p>
+                            <button onclick="showSection('reports-section')" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2 rounded-xl hover:from-orange-600 hover:to-orange-700 transition duration-200 w-full">
+                                Lihat Laporan
                             </button>
                         </div>
                     </div>
@@ -344,14 +487,147 @@
 
                 <!-- Chart Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 animate-slide-up" style="animation-delay: 0.7s;">
+                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 animate-slide-up" style="animation-delay: 0.8s;">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistik Kehadiran Mingguan</h3>
                         <canvas id="attendanceChart" width="400" height="200"></canvas>
                     </div>
                     
-                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 animate-slide-up" style="animation-delay: 0.8s;">
+                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 animate-slide-up" style="animation-delay: 0.9s;">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Distribusi Kelas</h3>
                         <canvas id="classChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Section -->
+            <div id="qr-section" class="p-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- QR Generator -->
+                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-semibold text-gray-900">QR Code Generator</h3>
+                            <div class="flex items-center space-x-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                                <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                <span>Auto Generate</span>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tipe QR Code</label>
+                                <select id="qrType" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="daily">Absensi Harian</option>
+                                    <option value="class">Absensi Per Kelas</option>
+                                    <option value="event">Event Khusus</option>
+                                </select>
+                            </div>
+                            
+                            <div id="classSelector" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kelas</label>
+                                <select id="selectedClass" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Semua Kelas</option>
+                                    <option value="X-1">X-1</option>
+                                    <option value="X-2">X-2</option>
+                                    <option value="XI-IPA-1">XI-IPA-1</option>
+                                    <option value="XI-IPS-1">XI-IPS-1</option>
+                                    <option value="XII-IPA-1">XII-IPA-1</option>
+                                </select>
+                            </div>
+                            
+                            <div id="eventName" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Event</label>
+                                <input type="text" id="eventNameInput" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Contoh: Upacara Bendera">
+                            </div>
+                        </div>
+                        
+                        <div class="qr-code-display mb-6" id="qrDisplayArea">
+                            <div class="text-center">
+                                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                                </svg>
+                                <p class="text-gray-500 text-lg font-medium">QR Code akan muncul di sini</p>
+                                <p class="text-gray-400 text-sm mt-2">Klik tombol generate untuk membuat QR code</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button id="generateQRBtn" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 transition duration-200 font-semibold">
+                                🎯 Generate QR Code
+                            </button>
+                            <button id="downloadQRBtn" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition duration-200 disabled:opacity-50" disabled>
+                                📥 Download
+                            </button>
+                        </div>
+                        
+                        <div id="qrInfo" class="mt-4 p-4 bg-gray-50 rounded-xl hidden">
+                            <h4 class="font-semibold text-gray-800 mb-2">Informasi QR Code:</h4>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <p><span class="font-medium">ID:</span> <span id="qrId">-</span></p>
+                                <p><span class="font-medium">Tipe:</span> <span id="qrTypeInfo">-</span></p>
+                                <p><span class="font-medium">Dibuat:</span> <span id="qrCreated">-</span></p>
+                                <p><span class="font-medium">Berlaku:</span> <span id="qrExpiry">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- QR Scanner -->
+                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-semibold text-gray-900">QR Code Scanner</h3>
+                            <div class="flex items-center space-x-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span id="scannerStatus">Siap Scan</span>
+                            </div>
+                        </div>
+                        
+                        <div class="qr-scanner-container mb-6" id="scannerContainer">
+                            <div id="scannerArea" class="aspect-square bg-gray-100 rounded-xl flex items-center justify-center">
+                                <div class="text-center">
+                                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                    </svg>
+                                    <p class="text-gray-500 text-lg font-medium">Kamera akan muncul di sini</p>
+                                    <p class="text-gray-400 text-sm mt-2">Klik tombol untuk mulai scan</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-3 mb-4">
+                            <button id="startScanBtn" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition duration-200 font-semibold">
+                                📷 Mulai Scan
+                            </button>
+                            <button id="stopScanBtn" class="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl hover:from-red-600 hover:to-red-700 transition duration-200 disabled:opacity-50" disabled>
+                                ⏹️ Stop
+                            </button>
+                        </div>
+                        
+                        <div id="scanResult" class="p-4 bg-gray-50 rounded-xl hidden">
+                            <h4 class="font-semibold text-gray-800 mb-2">Hasil Scan:</h4>
+                            <div class="text-sm text-gray-600 space-y-1" id="scanResultContent">
+                                <!-- Scan results will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent QR Activity -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-6">Aktivitas QR Terbaru</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Siswa</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe QR</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="qrActivityTable" class="bg-white divide-y divide-gray-200">
+                                <!-- QR activity will be populated here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -374,6 +650,7 @@
                                     <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIS</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">QR Code</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Hari Ini</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu Absen</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
@@ -389,29 +666,59 @@
 
             <!-- Attendance Section -->
             <div id="attendance-section" class="p-6 hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">QR Code Absensi</h3>
-                        <div class="text-center">
-                            <div id="qrDisplayArea" class="mb-4 p-8 bg-gray-50 rounded-xl">
-                                <p class="text-gray-500">Klik tombol untuk generate QR code</p>
-                            </div>
-                            <button id="generateQRBtn2" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 transition duration-200">
-                                Generate QR Code Baru
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Data Absensi Lengkap</h2>
+                    
+                    <!-- Filter Controls -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
+                            <input type="date" id="filterDate" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
+                            <select id="filterClass" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Semua Kelas</option>
+                                <option value="X-1">X-1</option>
+                                <option value="X-2">X-2</option>
+                                <option value="XI-IPA-1">XI-IPA-1</option>
+                                <option value="XI-IPS-1">XI-IPS-1</option>
+                                <option value="XII-IPA-1">XII-IPA-1</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="filterStatus" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Semua Status</option>
+                                <option value="present">Hadir</option>
+                                <option value="absent">Tidak Hadir</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button id="applyFilter" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-xl hover:from-blue-600 hover:to-blue-700 transition duration-200">
+                                Filter Data
                             </button>
                         </div>
                     </div>
                     
-                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Scan QR Code</h3>
-                        <div class="text-center">
-                            <div id="scannerArea" class="mb-4 p-8 bg-gray-50 rounded-xl">
-                                <p class="text-gray-500">Klik tombol untuk mulai scan</p>
-                            </div>
-                            <button id="scanQRBtn2" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition duration-200">
-                                Mulai Scan QR
-                            </button>
-                        </div>
+                    <!-- Attendance Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIS</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu Absen</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Metode</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Attendance data will be populated here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -460,7 +767,7 @@
         </div>
     </div>
 
-    <!-- Modals (same as before but with updated styling) -->
+    <!-- Modals -->
     <!-- Add Student Modal -->
     <div id="addStudentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-bounce-in">
@@ -489,9 +796,9 @@
                         <option value="XI-IPA-1">XI-IPA-1</option>
                         <option value="XI-IPA-2">XI-IPA-2</option>
                         <option value="XI-IPS-1">XI-IPS-1</option>
-                        <option value="XII-IPA-1">XII-A1</option>
-                        <option value="XII-IPA-2">XII-A2</option>
-                        <option value="XII-IPS-1">XII-C</option>
+                        <option value="XII-IPA-1">XII-IPA-1</option>
+                        <option value="XII-IPA-2">XII-IPA-2</option>
+                        <option value="XII-IPS-1">XII-IPS-1</option>
                     </select>
                 </div>
                 
@@ -517,7 +824,11 @@
             <form id="settingsForm" class="p-6 space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Logo Sekolah</label>
-                    <input type="file" id="logoUpload" accept="image/jepg, image/png*" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    <input type="file" id="logoUpload" accept="image/*" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    <div id="logoPreview" class="mt-3 w-20 h-20 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center hidden">
+                        <!-- Preview akan muncul di sini -->
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Format: JPG, PNG, GIF (Max: 2MB)</p>
                 </div>
                 
                 <div>
@@ -551,6 +862,8 @@
         // Application State
         let students = JSON.parse(localStorage.getItem('students')) || [];
         let attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+        let qrCodes = JSON.parse(localStorage.getItem('qrCodes')) || {};
+        let qrActivity = JSON.parse(localStorage.getItem('qrActivity')) || [];
         let settings = JSON.parse(localStorage.getItem('settings')) || {
             schoolName: 'SMA Negeri 1',
             teacherName: 'Budi Santoso, S.Pd',
@@ -560,16 +873,47 @@
 
         let currentSection = 'dashboard-section';
         let attendanceChart, classChart, reportChart;
+        let html5QrcodeScanner = null;
+        let currentQRCode = null;
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
             loadSettings();
             updateStats();
             renderStudentsTable();
+            renderAttendanceTable();
+            renderQRActivity();
             updateDateTime();
             initializeCharts();
+            setupEventListeners();
             setInterval(updateDateTime, 1000);
+            
+            // Set today's date as default
+            document.getElementById('filterDate').value = new Date().toISOString().split('T')[0];
         });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // QR Type change
+            document.getElementById('qrType').addEventListener('change', function() {
+                const type = this.value;
+                document.getElementById('classSelector').classList.toggle('hidden', type !== 'class');
+                document.getElementById('eventName').classList.toggle('hidden', type !== 'event');
+            });
+
+            // Generate QR Code
+            document.getElementById('generateQRBtn').addEventListener('click', generateAdvancedQRCode);
+            
+            // Download QR Code
+            document.getElementById('downloadQRBtn').addEventListener('click', downloadQRCode);
+            
+            // Scanner controls
+            document.getElementById('startScanBtn').addEventListener('click', startAdvancedScanner);
+            document.getElementById('stopScanBtn').addEventListener('click', stopScanner);
+            
+            // Filter controls
+            document.getElementById('applyFilter').addEventListener('click', applyAttendanceFilter);
+        }
 
         // Update date time
         function updateDateTime() {
@@ -595,12 +939,335 @@
             event.target.closest('.nav-item').classList.add('bg-white', 'bg-opacity-10');
             
             currentSection = sectionId;
+            
+            // Stop scanner if switching away from QR section
+            if (sectionId !== 'qr-section' && html5QrcodeScanner) {
+                stopScanner();
+            }
         }
 
-        // Dark mode toggle
-        document.getElementById('darkModeToggle').addEventListener('click', function() {
-            document.getElementById('body').classList.toggle('dark-mode');
-        });
+        // Advanced QR Code Generation
+        function generateAdvancedQRCode() {
+            const type = document.getElementById('qrType').value;
+            const selectedClass = document.getElementById('selectedClass').value;
+            const eventName = document.getElementById('eventNameInput').value;
+            
+            const qrId = 'QR_' + Date.now();
+            const now = new Date();
+            const expiry = new Date(now.getTime() + (24 * 60 * 60 * 1000)); // 24 hours
+            
+            const qrData = {
+                id: qrId,
+                type: type,
+                class: selectedClass || null,
+                event: eventName || null,
+                date: now.toISOString().split('T')[0],
+                created: now.toISOString(),
+                expiry: expiry.toISOString(),
+                school: settings.schoolName,
+                version: '2.1'
+            };
+            
+            // Store QR code data
+            qrCodes[qrId] = qrData;
+            localStorage.setItem('qrCodes', JSON.stringify(qrCodes));
+            
+            // Generate QR code
+            const qrContainer = document.getElementById('qrDisplayArea');
+            qrContainer.innerHTML = '';
+            
+            QRCode.toCanvas(qrContainer, JSON.stringify(qrData), {
+                width: 300,
+                height: 300,
+                margin: 2,
+                color: {
+                    dark: '#1f2937',
+                    light: '#ffffff'
+                },
+                errorCorrectionLevel: 'M'
+            }, function(error) {
+                if (error) {
+                    console.error(error);
+                    showNotification('Gagal membuat QR Code!', 'error');
+                } else {
+                    currentQRCode = qrData;
+                    document.getElementById('downloadQRBtn').disabled = false;
+                    
+                    // Update QR info
+                    document.getElementById('qrId').textContent = qrId;
+                    document.getElementById('qrTypeInfo').textContent = getQRTypeLabel(type);
+                    document.getElementById('qrCreated').textContent = now.toLocaleString('id-ID');
+                    document.getElementById('qrExpiry').textContent = expiry.toLocaleString('id-ID');
+                    document.getElementById('qrInfo').classList.remove('hidden');
+                    
+                    showNotification('QR Code berhasil dibuat!', 'success');
+                }
+            });
+        }
+
+        // Get QR type label
+        function getQRTypeLabel(type) {
+            const labels = {
+                'daily': 'Absensi Harian',
+                'class': 'Absensi Per Kelas',
+                'event': 'Event Khusus'
+            };
+            return labels[type] || type;
+        }
+
+        // Download QR Code
+        function downloadQRCode() {
+            if (!currentQRCode) return;
+            
+            const canvas = document.querySelector('#qrDisplayArea canvas');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = `QR_${currentQRCode.type}_${currentQRCode.date}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+                
+                showNotification('QR Code berhasil diunduh!', 'success');
+            }
+        }
+
+        // Advanced QR Scanner
+        function startAdvancedScanner() {
+            const scannerArea = document.getElementById('scannerArea');
+            scannerArea.innerHTML = '<div id="reader" class="w-full h-full"></div>';
+            
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader",
+                { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                },
+                false
+            );
+            
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            
+            document.getElementById('startScanBtn').disabled = true;
+            document.getElementById('stopScanBtn').disabled = false;
+            document.getElementById('scannerStatus').textContent = 'Scanning...';
+            
+            // Add scanning animation
+            const scannerContainer = document.getElementById('scannerContainer');
+            scannerContainer.classList.add('qr-scanner-container');
+        }
+
+        // Stop scanner
+        function stopScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().then(() => {
+                    const scannerArea = document.getElementById('scannerArea');
+                    scannerArea.innerHTML = `
+                        <div class="aspect-square bg-gray-100 rounded-xl flex items-center justify-center">
+                            <div class="text-center">
+                                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                </svg>
+                                <p class="text-gray-500 text-lg font-medium">Kamera akan muncul di sini</p>
+                                <p class="text-gray-400 text-sm mt-2">Klik tombol untuk mulai scan</p>
+                            </div>
+                        </div>
+                    `;
+                }).catch(err => {
+                    console.error("Failed to clear scanner", err);
+                });
+                
+                html5QrcodeScanner = null;
+            }
+            
+            document.getElementById('startScanBtn').disabled = false;
+            document.getElementById('stopScanBtn').disabled = true;
+            document.getElementById('scannerStatus').textContent = 'Siap Scan';
+        }
+
+        // Handle successful scan
+        function onScanSuccess(decodedText, decodedResult) {
+            try {
+                const qrData = JSON.parse(decodedText);
+                
+                // Validate QR code
+                if (!qrData.id || !qrData.type || !qrData.date) {
+                    throw new Error('Invalid QR code format');
+                }
+                
+                // Check if QR code is expired
+                const now = new Date();
+                const expiry = new Date(qrData.expiry);
+                if (now > expiry) {
+                    showNotification('QR Code sudah kadaluarsa!', 'error');
+                    return;
+                }
+                
+                // Check if QR code is for today
+                const today = new Date().toISOString().split('T')[0];
+                if (qrData.date !== today && qrData.type === 'daily') {
+                    showNotification('QR Code tidak berlaku untuk hari ini!', 'error');
+                    return;
+                }
+                
+                // Show scan result
+                displayScanResult(qrData);
+                
+                // Process attendance based on QR type
+                processQRAttendance(qrData);
+                
+            } catch (error) {
+                console.error('QR Scan Error:', error);
+                showNotification('QR Code tidak valid atau rusak!', 'error');
+            }
+        }
+
+        // Handle scan failure
+        function onScanFailure(error) {
+            // Handle scan failure silently - don't spam console
+        }
+
+        // Display scan result
+        function displayScanResult(qrData) {
+            const resultContent = document.getElementById('scanResultContent');
+            resultContent.innerHTML = `
+                <p><span class="font-medium">QR ID:</span> ${qrData.id}</p>
+                <p><span class="font-medium">Tipe:</span> ${getQRTypeLabel(qrData.type)}</p>
+                <p><span class="font-medium">Tanggal:</span> ${qrData.date}</p>
+                ${qrData.class ? `<p><span class="font-medium">Kelas:</span> ${qrData.class}</p>` : ''}
+                ${qrData.event ? `<p><span class="font-medium">Event:</span> ${qrData.event}</p>` : ''}
+                <p><span class="font-medium">Sekolah:</span> ${qrData.school}</p>
+            `;
+            
+            document.getElementById('scanResult').classList.remove('hidden');
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                document.getElementById('scanResult').classList.add('hidden');
+            }, 5000);
+        }
+
+        // Process QR attendance
+        function processQRAttendance(qrData) {
+            // For demo purposes, we'll simulate student selection
+            // In real implementation, this could be automatic based on device/login
+            const studentNIS = prompt('Masukkan NIS siswa untuk absensi:');
+            
+            if (!studentNIS) return;
+            
+            const student = students.find(s => s.nis === studentNIS);
+            if (!student) {
+                showNotification('Siswa dengan NIS tersebut tidak ditemukan!', 'error');
+                return;
+            }
+            
+            // Check class restriction
+            if (qrData.class && student.class !== qrData.class) {
+                showNotification(`QR Code ini hanya untuk kelas ${qrData.class}!`, 'error');
+                return;
+            }
+            
+            // Mark attendance
+            markQRAttendance(student, qrData);
+        }
+
+        // Mark QR attendance
+        function markQRAttendance(student, qrData) {
+            const today = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            
+            if (!attendance[today]) {
+                attendance[today] = {};
+            }
+            
+            if (attendance[today][student.nis]) {
+                showNotification('Siswa sudah absen hari ini!', 'warning');
+                return;
+            }
+            
+            // Record attendance
+            attendance[today][student.nis] = {
+                studentId: student.id,
+                time: now.toLocaleTimeString('id-ID'),
+                timestamp: now.toISOString(),
+                method: 'QR',
+                qrId: qrData.id,
+                qrType: qrData.type
+            };
+            
+            // Record QR activity
+            qrActivity.unshift({
+                id: Date.now(),
+                timestamp: now.toISOString(),
+                studentName: student.name,
+                studentNIS: student.nis,
+                studentClass: student.class,
+                qrId: qrData.id,
+                qrType: qrData.type,
+                status: 'success'
+            });
+            
+            // Keep only last 50 activities
+            qrActivity = qrActivity.slice(0, 50);
+            
+            // Save to localStorage
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+            localStorage.setItem('qrActivity', JSON.stringify(qrActivity));
+            
+            // Update UI
+            updateStats();
+            renderStudentsTable();
+            renderAttendanceTable();
+            renderQRActivity();
+            updateCharts();
+            
+            // Show success with animation
+            showNotification(`✅ ${student.name} berhasil absen via QR!`, 'success');
+            
+            // Add success animation to scanner
+            const scannerArea = document.getElementById('scannerArea');
+            scannerArea.classList.add('success-animation');
+            setTimeout(() => {
+                scannerArea.classList.remove('success-animation');
+            }, 600);
+        }
+
+        // Render QR Activity
+        function renderQRActivity() {
+            const tbody = document.getElementById('qrActivityTable');
+            tbody.innerHTML = '';
+            
+            qrActivity.slice(0, 10).forEach(activity => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition duration-200';
+                
+                const time = new Date(activity.timestamp).toLocaleString('id-ID');
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${time}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center text-white font-semibold text-xs mr-3">
+                                ${activity.studentName.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">${activity.studentName}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${activity.studentClass}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            ${getQRTypeLabel(activity.qrType)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            ✓ Berhasil
+                        </span>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
 
         // Login functionality
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -620,10 +1287,18 @@
 
         // Logout functionality
         document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (html5QrcodeScanner) {
+                stopScanner();
+            }
             document.getElementById('dashboard').classList.add('hidden');
             document.getElementById('loginPage').classList.remove('hidden');
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
+        });
+
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', function() {
+            document.getElementById('body').classList.toggle('dark-mode');
         });
 
         // Add student functionality
@@ -656,7 +1331,8 @@
                 name: name,
                 nis: nis,
                 class: studentClass,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                qrCode: generateStudentQRCode(nis, name)
             };
             
             students.push(student);
@@ -669,113 +1345,18 @@
             renderStudentsTable();
             updateCharts();
             
-            // Show success notification
-            showNotification('Siswa berhasil ditambahkan!', 'success');
+            showNotification('Siswa berhasil ditambahkan dengan QR Code!', 'success');
         });
 
-        // QR Code generation
-        document.getElementById('generateQRBtn').addEventListener('click', generateQRCode);
-        document.getElementById('generateQRBtn2').addEventListener('click', generateQRCode);
-
-        function generateQRCode() {
-            const qrData = {
-                type: 'attendance',
-                date: new Date().toISOString().split('T')[0],
-                timestamp: Date.now()
+        // Generate student QR code
+        function generateStudentQRCode(nis, name) {
+            return {
+                id: 'STUDENT_' + nis,
+                nis: nis,
+                name: name,
+                type: 'student',
+                created: new Date().toISOString()
             };
-            
-            const qrContainer = document.getElementById('qrDisplayArea') || document.createElement('div');
-            qrContainer.innerHTML = '';
-            
-            QRCode.toCanvas(qrContainer, JSON.stringify(qrData), {
-                width: 200,
-                height: 200,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                }
-            }, function(error) {
-                if (error) console.error(error);
-                else showNotification('QR Code berhasil dibuat!', 'success');
-            });
-        }
-
-        // QR Code scanning
-        let html5QrcodeScanner;
-        
-        document.getElementById('scanQRBtn').addEventListener('click', startQRScanner);
-        document.getElementById('scanQRBtn2').addEventListener('click', startQRScanner);
-
-        function startQRScanner() {
-            const scannerArea = document.getElementById('scannerArea') || document.createElement('div');
-            scannerArea.innerHTML = '<div id="reader"></div>';
-            
-            html5QrcodeScanner = new Html5QrcodeScanner(
-                "reader", 
-                { fps: 10, qrbox: {width: 250, height: 250} },
-                false
-            );
-            
-            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-        }
-
-        function onScanSuccess(decodedText, decodedResult) {
-            try {
-                const qrData = JSON.parse(decodedText);
-                if (qrData.type === 'attendance') {
-                    // Show student selection for manual attendance
-                    const studentNIS = prompt('Masukkan NIS siswa:');
-                    if (studentNIS) {
-                        markAttendance(studentNIS);
-                    }
-                }
-            } catch (error) {
-                showNotification('QR Code tidak valid!', 'error');
-            }
-            
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear();
-            }
-        }
-
-        function onScanFailure(error) {
-            // Handle scan failure silently
-        }
-
-        // Mark attendance
-        function markAttendance(nis) {
-            const student = students.find(s => s.nis === nis);
-            if (!student) {
-                showNotification('Siswa tidak ditemukan!', 'error');
-                return;
-            }
-            
-            const today = new Date().toISOString().split('T')[0];
-            const now = new Date();
-            
-            if (!attendance[today]) {
-                attendance[today] = {};
-            }
-            
-            if (attendance[today][nis]) {
-                showNotification('Siswa sudah absen hari ini!', 'warning');
-                return;
-            }
-            
-            attendance[today][nis] = {
-                studentId: student.id,
-                time: now.toLocaleTimeString('id-ID'),
-                timestamp: now.toISOString()
-            };
-            
-            localStorage.setItem('attendance', JSON.stringify(attendance));
-            
-            updateStats();
-            renderStudentsTable();
-            updateCharts();
-            
-            showNotification(`${student.name} berhasil absen pada ${now.toLocaleTimeString('id-ID')}`, 'success');
         }
 
         // Settings functionality
@@ -786,6 +1367,36 @@
 
         document.getElementById('cancelSettings').addEventListener('click', function() {
             document.getElementById('settingsModal').classList.add('hidden');
+        });
+
+        // Logo upload preview
+        document.getElementById('logoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validasi ukuran file (max 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    showNotification('Ukuran file terlalu besar! Maksimal 2MB', 'error');
+                    this.value = '';
+                    return;
+                }
+                
+                // Validasi tipe file
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    showNotification('Format file tidak didukung! Gunakan JPG, PNG, atau GIF', 'error');
+                    this.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('logoPreview');
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview Logo" class="w-full h-full object-cover rounded-xl">`;
+                    preview.classList.remove('hidden');
+                    showNotification('Logo berhasil dipilih!', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
         });
 
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
@@ -802,6 +1413,7 @@
                     settings.logo = e.target.result;
                     localStorage.setItem('settings', JSON.stringify(settings));
                     loadSettings();
+                    showNotification('Logo berhasil diubah!', 'success');
                 };
                 reader.readAsDataURL(logoFile);
             } else {
@@ -816,8 +1428,30 @@
         function loadSettings() {
             document.getElementById('schoolName').textContent = settings.schoolName;
             
+            // Update logo di login page
             if (settings.logo) {
-                document.getElementById('schoolLogo').innerHTML = `<img src="${settings.logo}" alt="Logo" class="w-full h-full object-cover rounded-2xl">`;
+                document.getElementById('schoolLogo').innerHTML = `<img src="${settings.logo}" alt="Logo Sekolah" class="w-full h-full object-cover rounded-2xl">`;
+            } else {
+                // Default logo jika belum ada upload
+                document.getElementById('schoolLogo').innerHTML = `
+                    <svg class="w-14 h-14 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                `;
+            }
+            
+            // Update logo di sidebar dashboard
+            const sidebarLogo = document.querySelector('.sidebar-gradient .w-10.h-10');
+            if (sidebarLogo && settings.logo) {
+                sidebarLogo.innerHTML = `<img src="${settings.logo}" alt="Logo" class="w-full h-full object-cover rounded-xl">`;
+                sidebarLogo.classList.remove('bg-gradient-to-r', 'from-blue-400', 'to-purple-500');
+            } else if (sidebarLogo) {
+                sidebarLogo.innerHTML = `
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
+                    </svg>
+                `;
+                sidebarLogo.classList.add('bg-gradient-to-r', 'from-blue-400', 'to-purple-500');
             }
         }
 
@@ -825,6 +1459,32 @@
             document.getElementById('schoolNameSetting').value = settings.schoolName;
             document.getElementById('teacherName').value = settings.teacherName;
             document.getElementById('principalName').value = settings.principalName;
+            
+            // Show current logo if exists
+            const preview = document.getElementById('logoPreview');
+            if (settings.logo) {
+                preview.innerHTML = `
+                    <img src="${settings.logo}" alt="Logo Saat Ini" class="w-full h-full object-cover rounded-xl">
+                    <button type="button" onclick="removeLogo()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition duration-200">
+                        ×
+                    </button>
+                `;
+                preview.classList.remove('hidden');
+                preview.classList.add('relative');
+            } else {
+                preview.classList.add('hidden');
+                preview.classList.remove('relative');
+            }
+        }
+        
+        // Remove logo function
+        function removeLogo() {
+            settings.logo = null;
+            localStorage.setItem('settings', JSON.stringify(settings));
+            loadSettings();
+            loadSettingsForm();
+            document.getElementById('logoUpload').value = '';
+            showNotification('Logo berhasil dihapus!', 'success');
         }
 
         // Update statistics
@@ -835,12 +1495,17 @@
             const totalStudents = students.length;
             const presentToday = Object.keys(todayAttendance).length;
             const absentToday = totalStudents - presentToday;
-            const attendanceRate = totalStudents > 0 ? Math.round((presentToday / totalStudents) * 100) : 0;
+            
+            // Count QR scans today
+            const qrScansToday = qrActivity.filter(activity => {
+                const activityDate = new Date(activity.timestamp).toISOString().split('T')[0];
+                return activityDate === today;
+            }).length;
             
             document.getElementById('totalStudents').textContent = totalStudents;
             document.getElementById('presentToday').textContent = presentToday;
             document.getElementById('absentToday').textContent = absentToday;
-            document.getElementById('attendanceRate').textContent = attendanceRate + '%';
+            document.getElementById('qrScansToday').textContent = qrScansToday;
             
             // Update monthly stats
             const currentMonth = new Date().getMonth();
@@ -853,6 +1518,8 @@
                     monthlyTotal += Object.keys(attendance[date]).length;
                 }
             });
+            
+            const attendanceRate = totalStudents > 0 ? Math.round((presentToday / totalStudents) * 100) : 0;
             
             document.getElementById('monthlyAttendance').textContent = monthlyTotal;
             document.getElementById('averageAttendance').textContent = attendanceRate + '%';
@@ -912,6 +1579,11 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="showStudentQR('${student.nis}')" class="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-3 py-1 rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition duration-200 text-xs">
+                            📱 QR Siswa
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-3 py-1 text-xs leading-5 font-semibold rounded-full ${isPresent ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                             ${isPresent ? '✓ Hadir' : '✗ Tidak Hadir'}
                         </span>
@@ -920,17 +1592,121 @@
                         ${isPresent ? isPresent.time : '-'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button onclick="markAttendance('${student.nis}')" class="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-3 py-1 rounded-lg hover:from-teal-600 hover:to-teal-700 transition duration-200 text-xs">
-                            Absen Manual
+                        <button onclick="markManualAttendance('${student.nis}')" class="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-3 py-1 rounded-lg hover:from-teal-600 hover:to-teal-700 transition duration-200 text-xs">
+                            ✋ Manual
                         </button>
                         <button onclick="deleteStudent(${student.id})" class="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-lg hover:from-red-600 hover:to-red-700 transition duration-200 text-xs">
-                            Hapus
+                            🗑️ Hapus
                         </button>
                     </td>
                 `;
                 
                 tbody.appendChild(row);
             });
+        }
+
+        // Show student QR
+        function showStudentQR(nis) {
+            const student = students.find(s => s.nis === nis);
+            if (!student) return;
+            
+            const qrData = {
+                type: 'student_id',
+                nis: student.nis,
+                name: student.name,
+                class: student.class,
+                school: settings.schoolName,
+                generated: new Date().toISOString()
+            };
+            
+            // Create modal for student QR
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-bounce-in">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                        <h3 class="text-xl font-semibold text-gray-800">QR Code - ${student.name}</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="p-6 text-center">
+                        <div id="studentQRContainer" class="mb-4"></div>
+                        <p class="text-gray-600 text-sm mb-4">QR Code untuk ${student.name} (${student.nis})</p>
+                        <button onclick="downloadStudentQR('${student.nis}')" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-blue-600 hover:to-blue-700 transition duration-200">
+                            📥 Download QR
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Generate QR code
+            QRCode.toCanvas(modal.querySelector('#studentQRContainer'), JSON.stringify(qrData), {
+                width: 200,
+                height: 200,
+                margin: 2,
+                color: {
+                    dark: '#1f2937',
+                    light: '#ffffff'
+                }
+            });
+        }
+
+        // Download student QR
+        function downloadStudentQR(nis) {
+            const student = students.find(s => s.nis === nis);
+            if (!student) return;
+            
+            const canvas = document.querySelector('#studentQRContainer canvas');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = `QR_Student_${student.name}_${student.nis}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+                
+                showNotification('QR Code siswa berhasil diunduh!', 'success');
+            }
+        }
+
+        // Mark manual attendance
+        function markManualAttendance(nis) {
+            const student = students.find(s => s.nis === nis);
+            if (!student) {
+                showNotification('Siswa tidak ditemukan!', 'error');
+                return;
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            
+            if (!attendance[today]) {
+                attendance[today] = {};
+            }
+            
+            if (attendance[today][nis]) {
+                showNotification('Siswa sudah absen hari ini!', 'warning');
+                return;
+            }
+            
+            attendance[today][nis] = {
+                studentId: student.id,
+                time: now.toLocaleTimeString('id-ID'),
+                timestamp: now.toISOString(),
+                method: 'Manual'
+            };
+            
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+            
+            updateStats();
+            renderStudentsTable();
+            renderAttendanceTable();
+            updateCharts();
+            
+            showNotification(`${student.name} berhasil absen manual!`, 'success');
         }
 
         // Delete student
@@ -947,6 +1723,143 @@
             }
         }
 
+        // Render attendance table
+        function renderAttendanceTable() {
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = '';
+            
+            // Get all attendance records
+            const allRecords = [];
+            Object.keys(attendance).forEach(date => {
+                Object.keys(attendance[date]).forEach(nis => {
+                    const record = attendance[date][nis];
+                    const student = students.find(s => s.nis === nis);
+                    if (student) {
+                        allRecords.push({
+                            date: date,
+                            student: student,
+                            record: record
+                        });
+                    }
+                });
+            });
+            
+            // Sort by date (newest first)
+            allRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Display records
+            allRecords.slice(0, 50).forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition duration-200';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center text-white font-semibold text-xs mr-3">
+                                ${item.student.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">${item.student.name}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.student.nis}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            ${item.student.class}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.record.time}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${item.record.method === 'QR' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}">
+                            ${item.record.method === 'QR' ? '📱 QR Scan' : '✋ Manual'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            ✓ Hadir
+                        </span>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Apply attendance filter
+        function applyAttendanceFilter() {
+            const filterDate = document.getElementById('filterDate').value;
+            const filterClass = document.getElementById('filterClass').value;
+            const filterStatus = document.getElementById('filterStatus').value;
+            
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = '';
+            
+            // Get filtered records
+            const filteredRecords = [];
+            
+            if (filterDate) {
+                const dateAttendance = attendance[filterDate] || {};
+                
+                students.forEach(student => {
+                    const record = dateAttendance[student.nis];
+                    const isPresent = !!record;
+                    
+                    // Apply class filter
+                    if (filterClass && student.class !== filterClass) return;
+                    
+                    // Apply status filter
+                    if (filterStatus === 'present' && !isPresent) return;
+                    if (filterStatus === 'absent' && isPresent) return;
+                    
+                    filteredRecords.push({
+                        date: filterDate,
+                        student: student,
+                        record: record,
+                        isPresent: isPresent
+                    });
+                });
+            }
+            
+            // Display filtered records
+            filteredRecords.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition duration-200';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gradient-to-r from-${item.isPresent ? 'green' : 'red'}-400 to-${item.isPresent ? 'green' : 'red'}-500 rounded-full flex items-center justify-center text-white font-semibold text-xs mr-3">
+                                ${item.student.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">${item.student.name}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.student.nis}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            ${item.student.class}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.record ? item.record.time : '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${item.record ? `<span class="px-2 py-1 text-xs font-semibold rounded-full ${item.record.method === 'QR' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}">
+                            ${item.record.method === 'QR' ? '📱 QR Scan' : '✋ Manual'}
+                        </span>` : '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 text-xs leading-5 font-semibold rounded-full ${item.isPresent ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${item.isPresent ? '✓ Hadir' : '✗ Tidak Hadir'}
+                        </span>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            showNotification(`Filter diterapkan: ${filteredRecords.length} record ditemukan`, 'info');
+        }
+
         // Initialize charts
         function initializeCharts() {
             // Attendance Chart
@@ -960,7 +1873,8 @@
                         data: [65, 59, 80, 81, 56, 55, 40],
                         borderColor: 'rgb(59, 130, 246)',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4
+                        tension: 0.4,
+                        fill: true
                     }]
                 },
                 options: {
@@ -1017,7 +1931,8 @@
                         data: [85, 90, 78, 92, 88, 95],
                         backgroundColor: 'rgba(59, 130, 246, 0.8)',
                         borderColor: 'rgb(59, 130, 246)',
-                        borderWidth: 1
+                        borderWidth: 1,
+                        borderRadius: 8
                     }]
                 },
                 options: {
@@ -1060,7 +1975,8 @@
                     'NIS': student.nis,
                     'Kelas': student.class,
                     'Status': isPresent ? 'Hadir' : 'Tidak Hadir',
-                    'Waktu Absen': isPresent ? isPresent.time : '-'
+                    'Waktu Absen': isPresent ? isPresent.time : '-',
+                    'Metode': isPresent ? isPresent.method : '-'
                 };
             });
             
@@ -1068,7 +1984,7 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
             
-            XLSX.writeFile(wb, `Absensi_${today}.xlsx`);
+            XLSX.writeFile(wb, `Absensi_QR_${today}.xlsx`);
             showNotification('File Excel berhasil diunduh!', 'success');
         });
 
@@ -1080,55 +1996,90 @@
             const today = new Date().toISOString().split('T')[0];
             const todayAttendance = attendance[today] || {};
             
-            doc.setFontSize(16);
-            doc.text(settings.schoolName, 20, 20);
+            // Add header
+            doc.setFontSize(20);
+            doc.text(`Laporan Absensi QR - ${settings.schoolName}`, 20, 30);
             doc.setFontSize(12);
-            doc.text(`Laporan Absensi - ${today}`, 20, 30);
-            doc.text(`Guru: ${settings.teacherName}`, 20, 40);
-            doc.text(`Kepala Sekolah: ${settings.principalName}`, 20, 50);
+            doc.text(`Tanggal: ${today}`, 20, 45);
+            doc.text(`Guru: ${settings.teacherName}`, 20, 55);
             
-            let y = 70;
+            // Add table headers
+            let yPos = 75;
             doc.setFontSize(10);
-            doc.text('No', 20, y);
-            doc.text('Nama', 35, y);
-            doc.text('NIS', 80, y);
-            doc.text('Kelas', 110, y);
-            doc.text('Status', 140, y);
-            doc.text('Waktu', 170, y);
+            doc.text('No', 20, yPos);
+            doc.text('Nama', 35, yPos);
+            doc.text('NIS', 80, yPos);
+            doc.text('Kelas', 110, yPos);
+            doc.text('Status', 140, yPos);
+            doc.text('Waktu', 170, yPos);
             
-            y += 10;
+            // Add student data
+            yPos += 10;
             students.forEach((student, index) => {
+                if (yPos > 280) {
+                    doc.addPage();
+                    yPos = 30;
+                }
+                
                 const isPresent = todayAttendance[student.nis];
-                doc.text((index + 1).toString(), 20, y);
-                doc.text(student.name, 35, y);
-                doc.text(student.nis, 80, y);
-                doc.text(student.class, 110, y);
-                doc.text(isPresent ? 'Hadir' : 'Tidak Hadir', 140, y);
-                doc.text(isPresent ? isPresent.time : '-', 170, y);
-                y += 8;
+                doc.text((index + 1).toString(), 20, yPos);
+                doc.text(student.name.substring(0, 20), 35, yPos);
+                doc.text(student.nis, 80, yPos);
+                doc.text(student.class, 110, yPos);
+                doc.text(isPresent ? 'Hadir' : 'Tidak Hadir', 140, yPos);
+                doc.text(isPresent ? isPresent.time : '-', 170, yPos);
+                yPos += 8;
             });
             
-            doc.save(`Absensi_${today}.pdf`);
+            // Add footer
+            doc.setFontSize(8);
+            doc.text(`Kepala Sekolah: ${settings.principalName}`, 20, yPos + 20);
+            doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}`, 20, yPos + 30);
+            
+            doc.save(`Laporan_Absensi_QR_${today}.pdf`);
             showNotification('File PDF berhasil diunduh!', 'success');
         });
 
         // Show notification
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg text-white animate-slide-up ${
-                type === 'success' ? 'bg-green-500' :
-                type === 'error' ? 'bg-red-500' :
-                type === 'warning' ? 'bg-yellow-500' :
-                'bg-blue-500'
-            }`;
-            notification.textContent = message;
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-lg text-white font-medium animate-slide-up`;
             
+            switch(type) {
+                case 'success':
+                    notification.classList.add('bg-green-500');
+                    break;
+                case 'error':
+                    notification.classList.add('bg-red-500');
+                    break;
+                case 'warning':
+                    notification.classList.add('bg-yellow-500');
+                    break;
+                default:
+                    notification.classList.add('bg-blue-500');
+            }
+            
+            notification.textContent = message;
             document.body.appendChild(notification);
             
             setTimeout(() => {
                 notification.remove();
             }, 3000);
         }
+
+        // Initialize sample data if empty
+        if (students.length === 0) {
+            const sampleStudents = [
+                { id: 1, name: 'Ahmad Rizki', nis: '2024001', class: 'X-1', createdAt: new Date().toISOString(), qrCode: generateStudentQRCode('2024001', 'Ahmad Rizki') },
+                { id: 2, name: 'Siti Nurhaliza', nis: '2024002', class: 'X-1', createdAt: new Date().toISOString(), qrCode: generateStudentQRCode('2024002', 'Siti Nurhaliza') },
+                { id: 3, name: 'Budi Santoso', nis: '2024003', class: 'X-2', createdAt: new Date().toISOString(), qrCode: generateStudentQRCode('2024003', 'Budi Santoso') },
+                { id: 4, name: 'Dewi Lestari', nis: '2024004', class: 'XI-IPA-1', createdAt: new Date().toISOString(), qrCode: generateStudentQRCode('2024004', 'Dewi Lestari') },
+                { id: 5, name: 'Andi Pratama', nis: '2024005', class: 'XI-IPS-1', createdAt: new Date().toISOString(), qrCode: generateStudentQRCode('2024005', 'Andi Pratama') }
+            ];
+            
+            students = sampleStudents;
+            localStorage.setItem('students', JSON.stringify(students));
+        }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97013df833c8b5ab',t:'MTc1NTM1MDU2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9702562c20adfd07',t:'MTc1NTM2MjA0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
