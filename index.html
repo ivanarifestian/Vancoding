@@ -30,6 +30,15 @@
         .tosca-button:hover {
             background-color: #1aae82;
         }
+        .gemini-button {
+            background: linear-gradient(45deg, #4285F4, #9B72CB, #D96570, #F2A60C);
+            color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .gemini-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
         /* Hide scrollbar for Chrome, Safari and Opera */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
@@ -38,6 +47,18 @@
         .no-scrollbar {
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #20c997;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -191,8 +212,9 @@
                          <div class="bg-white p-6 rounded-lg shadow-md">
                             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                                 <h2 class="text-xl font-bold text-gray-800">Laporan Kehadiran Siswa</h2>
-                                <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <input type="date" id="reportDate" class="px-3 py-2 border border-gray-300 rounded-lg">
+                                    <button id="generateSummaryButton" class="px-4 py-2 font-semibold gemini-button rounded-lg">✨ Buat Ringkasan</button>
                                     <button id="downloadPdf" class="px-4 py-2 font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg"><i class="fas fa-file-pdf mr-2"></i>PDF</button>
                                     <button id="downloadExcel" class="px-4 py-2 font-semibold text-white bg-green-500 hover:bg-green-600 rounded-lg"><i class="fas fa-file-excel mr-2"></i>Excel</button>
                                 </div>
@@ -206,6 +228,7 @@
                                             <th class="p-3">NIS</th>
                                             <th class="p-3">Status</th>
                                             <th class="p-3">Waktu Absen</th>
+                                            <th class="p-3 text-center">Aksi AI</th>
                                         </tr>
                                     </thead>
                                     <tbody id="attendanceTableBody">
@@ -286,7 +309,7 @@
 
 
     <!-- Modal Tambah/Edit Siswa -->
-    <div id="studentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div id="studentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3 text-center">
                 <h3 id="modalTitle" class="text-lg leading-6 font-medium text-gray-900">Tambah Siswa Baru</h3>
@@ -310,7 +333,7 @@
     </div>
     
     <!-- Modal QR Code -->
-    <div id="qrModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div id="qrModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
         <div class="relative top-20 mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white">
             <div class="mt-3 text-center">
                 <h3 class="text-xl leading-6 font-bold text-gray-900">Scan untuk Absen</h3>
@@ -324,6 +347,29 @@
         </div>
     </div>
     
+    <!-- Modal Gemini AI -->
+    <div id="geminiModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="geminiModalTitle" class="text-lg leading-6 font-medium text-gray-900">✨ Hasil dari AI</h3>
+                    <button id="closeGeminiModal" class="text-gray-400 hover:text-gray-600">&times;</button>
+                </div>
+                <div id="geminiModalContent" class="mt-2 px-7 py-3 bg-gray-50 rounded-lg min-h-[200px]">
+                    <!-- Loader -->
+                    <div id="geminiLoader" class="flex justify-center items-center h-full">
+                        <div class="loader"></div>
+                    </div>
+                    <!-- Result -->
+                    <div id="geminiResult" class="hidden prose max-w-none"></div>
+                </div>
+                <div class="items-center px-4 py-3 mt-4 flex justify-end gap-3">
+                    <button id="copyGeminiResult" class="px-4 py-2 tosca-button text-white rounded-lg hidden"><i class="fas fa-copy mr-2"></i>Salin Teks</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Halaman Absensi Siswa (diakses via QR) -->
     <div id="studentAttendancePage" class="hidden flex items-center justify-center min-h-screen tosca-bg p-4">
         <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
@@ -388,9 +434,70 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileMenuButton = document.getElementById('mobileMenuButton');
     const closeMobileMenu = document.getElementById('closeMobileMenu');
     const mobileMenu = document.getElementById('mobileMenu');
+    
+    // Gemini AI Elements
+    const geminiModal = document.getElementById('geminiModal');
+    const closeGeminiModal = document.getElementById('closeGeminiModal');
+    const geminiModalTitle = document.getElementById('geminiModalTitle');
+    const geminiLoader = document.getElementById('geminiLoader');
+    const geminiResult = document.getElementById('geminiResult');
+    const copyGeminiResult = document.getElementById('copyGeminiResult');
+    const generateSummaryButton = document.getElementById('generateSummaryButton');
 
     let qrcodeInstance = null;
     let db = {};
+
+    // --- GEMINI API FUNCTION ---
+    // This is a mock function. In a real application, you would make a fetch call to the Gemini API.
+    async function callGeminiAPI(prompt) {
+        // Show loading state
+        geminiLoader.style.display = 'flex';
+        geminiResult.classList.add('hidden');
+        copyGeminiResult.classList.add('hidden');
+        geminiModal.classList.remove('hidden');
+
+        try {
+            // Using the Gemini API
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; // API key is handled by the environment
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`API call failed with status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            let text = 'Maaf, terjadi kesalahan saat memproses permintaan Anda.';
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+                text = result.candidates[0].content.parts[0].text;
+            }
+            
+            // Format response with paragraphs
+            const formattedText = text.split('\n').map(p => `<p>${p}</p>`).join('');
+            geminiResult.innerHTML = formattedText;
+
+        } catch (error) {
+            console.error("Error calling Gemini API:", error);
+            geminiResult.innerHTML = `<p class="text-red-500">Gagal mendapatkan respon dari AI. Silakan coba lagi nanti.</p><p class="text-xs text-gray-500 mt-2">${error.message}</p>`;
+        } finally {
+            // Hide loading state and show result
+            geminiLoader.style.display = 'none';
+            geminiResult.classList.remove('hidden');
+            copyGeminiResult.classList.remove('hidden');
+        }
+    }
+
 
     // --- UTILITY FUNCTIONS ---
     const getTodayDateString = () => new Date().toISOString().split('T')[0];
@@ -416,7 +523,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- RENDER/UPDATE UI FUNCTIONS ---
     const updateUI = () => {
-        // Update settings display
         const settings = db.settings;
         document.getElementById('loginSchoolName').textContent = settings.schoolName;
         document.getElementById('sidebarSchoolName').textContent = settings.schoolName;
@@ -429,7 +535,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('mobileSidebarLogo').src = settings.logo;
         document.getElementById('studentPageLogo').src = settings.logo;
 
-        // Update settings form
         document.getElementById('schoolName').value = settings.schoolName;
         document.getElementById('teacherName').value = settings.teacherName;
         document.getElementById('headmasterName').value = settings.headmasterName;
@@ -481,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const attendanceData = db.attendance[date] || [];
         
         if (db.students.length === 0) {
-            attendanceTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">Tidak ada data siswa.</td></tr>`;
+            attendanceTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">Tidak ada data siswa.</td></tr>`;
             return;
         }
 
@@ -493,6 +598,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusOptions = ['Hadir', 'Sakit', 'Izin', 'Alfa', 'Belum Absen']
                 .map(s => `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`)
                 .join('');
+            
+            const aiButton = (status === 'Sakit' || status === 'Izin') 
+                ? `<button class="px-2 py-1 text-xs font-semibold gemini-button rounded-md create-note-button" data-student-name="${student.name}" data-status="${status}">✨ Buat Catatan</button>`
+                : '-';
 
             const row = `
                 <tr class="border-b">
@@ -505,6 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </select>
                     </td>
                     <td class="p-3">${timestamp}</td>
+                    <td class="p-3 text-center">${aiButton}</td>
                 </tr>
             `;
             attendanceTableBody.innerHTML += row;
@@ -524,7 +634,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         pageTitle.textContent = pageTitles[pageId];
 
-        // Update active link style
         const setActiveLink = (links) => {
             links.forEach(link => {
                 link.classList.remove('bg-black/20');
@@ -781,7 +890,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const todayAttendance = db.attendance[date] || [];
         const presentStudentIds = todayAttendance.map(att => att.studentId);
         
-        // Only show students who haven't attended yet
         db.students.filter(s => !presentStudentIds.includes(s.id)).forEach(student => {
             const option = document.createElement('option');
             option.value = student.id;
@@ -819,6 +927,100 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('attendanceSuccessMessage').classList.remove('hidden');
         };
     };
+    
+    // Gemini AI Event Listeners
+    closeGeminiModal.addEventListener('click', () => geminiModal.classList.add('hidden'));
+    
+    copyGeminiResult.addEventListener('click', () => {
+        const textToCopy = geminiResult.innerText;
+        // Use the Clipboard API
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert('Teks berhasil disalin!');
+        }).catch(err => {
+            console.error('Gagal menyalin teks: ', err);
+            // Fallback for older browsers
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Teks berhasil disalin!');
+            } catch (e) {
+                alert('Gagal menyalin teks secara otomatis.');
+            }
+        });
+    });
+
+    generateSummaryButton.addEventListener('click', () => {
+        const date = reportDateInput.value;
+        const attendanceData = db.attendance[date] || [];
+        const totalStudents = db.students.length;
+
+        if (totalStudents === 0) {
+            alert('Tidak ada data siswa untuk dibuatkan ringkasan.');
+            return;
+        }
+
+        let present = 0;
+        let sick = [];
+        let permission = [];
+        let alpha = [];
+
+        db.students.forEach(student => {
+            const record = attendanceData.find(att => att.studentId === student.id);
+            if (!record || record.status === 'Belum Absen') {
+                alpha.push(student.name);
+            } else {
+                switch (record.status) {
+                    case 'Hadir': present++; break;
+                    case 'Sakit': sick.push(student.name); break;
+                    case 'Izin': permission.push(student.name); break;
+                    case 'Alfa': alpha.push(student.name); break;
+                }
+            }
+        });
+
+        const formattedDate = new Date(date).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        
+        let dataSummary = `Total siswa: ${totalStudents}. Hadir: ${present}.`;
+        if (sick.length > 0) dataSummary += ` Sakit: ${sick.length} (${sick.join(', ')}).`;
+        if (permission.length > 0) dataSummary += ` Izin: ${permission.length} (${permission.join(', ')}).`;
+        if (alpha.length > 0) dataSummary += ` Alfa/Tanpa Keterangan: ${alpha.length} (${alpha.join(', ')}).`;
+
+        const prompt = `Anda adalah asisten guru yang cerdas. Buat ringkasan laporan absensi harian dalam format naratif yang jelas dan ringkas berdasarkan data berikut. Gunakan bahasa Indonesia yang formal dan sopan.
+        
+        Data Absensi:
+        - Tanggal: ${formattedDate}
+        - Rincian: ${dataSummary}
+        
+        Tolong buatkan paragraf ringkasan dari data tersebut.`;
+        
+        geminiModalTitle.textContent = `✨ Ringkasan Absensi Cerdas (${formattedDate})`;
+        callGeminiAPI(prompt);
+    });
+    
+    attendanceTableBody.addEventListener('click', (e) => {
+        if (e.target.classList.contains('create-note-button')) {
+            const studentName = e.target.dataset.studentName;
+            const status = e.target.dataset.status;
+            const teacherName = db.settings.teacherName;
+
+            const prompt = `Anda adalah asisten guru. Buatkan sebuah pesan singkat yang sopan dan formal untuk dikirimkan kepada orang tua/wali siswa. Pesan ini menginformasikan bahwa anak mereka tidak masuk sekolah karena alasan tertentu.
+            
+            Detail:
+            - Nama Siswa: ${studentName}
+            - Alasan Tidak Masuk: ${status}
+            - Pengirim: ${teacherName}
+            
+            Buatkan pesan tersebut dalam bahasa Indonesia. Sertakan harapan agar siswa lekas sembuh jika alasannya adalah sakit.`;
+            
+            geminiModalTitle.textContent = `✨ Catatan untuk Orang Tua ${studentName}`;
+            callGeminiAPI(prompt);
+        }
+    });
 
     // --- INITIALIZATION ---
     const checkLoginStatus = () => {
@@ -838,7 +1040,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginPage.classList.remove('hidden');
             appPage.classList.add('hidden');
             studentAttendancePage.classList.add('hidden');
-            updateUI(); // To load school name and logo on login page
+            updateUI();
         }
     };
     
